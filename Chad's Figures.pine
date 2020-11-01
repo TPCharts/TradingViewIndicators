@@ -1,0 +1,51 @@
+//@version=4
+study("Chad's Figures (@tradeprophet)", overlay=true)
+
+var number_of_lines = input(5, title="Total", type=input.integer)
+
+var isIntervalCustom = input(title="Use Custom Interval? (Overrides Interval auto-detection for asset class)", type=input.bool, defval=false)
+var Interval = input(title="Interval", type=input.float, defval=100.00)
+// var isIntervalShown = input(title="Show Default Interval?", type=input.bool, defval=false)
+// if isIntervalShown
+//     x = bar_index
+//     y = close
+//     txt = tostring(syminfo.mintick)
+    
+//     if barstate.islast
+//         label.new(x, y, txt)
+        
+if not isIntervalCustom and syminfo.type == 'forex'
+    Interval := syminfo.mintick*100
+    
+if not isIntervalCustom and syminfo.type == 'bitcoin'
+    Interval := syminfo.mintick*200
+
+if barstate.islast
+  
+    for counter = 0 to number_of_lines - 1
+    
+        // Upper
+        IntervalUp = floor(close / Interval) * Interval + (counter * Interval)
+        line.new(bar_index, IntervalUp, bar_index - 1, IntervalUp, xloc=xloc.bar_index, extend=extend.both, color=color.gray, width=2, style=line.style_solid)
+        
+        IntervalUp20 = floor(close / Interval) * Interval + (counter * Interval) + (Interval / 5)
+        line.new(bar_index, IntervalUp20, bar_index - 1, IntervalUp20, xloc=xloc.bar_index, extend=extend.both, color=color.gray, width=1, style=line.style_dotted)
+
+        IntervalUp80 = floor(close / Interval) * Interval + (counter * Interval) - (Interval / 5)
+        line.new(bar_index, IntervalUp80, bar_index - 1, IntervalUp80, xloc=xloc.bar_index, extend=extend.both, color=color.gray, width=1, style=line.style_dotted)
+
+        IntervalUpMidFig = floor(close / Interval) * Interval + (counter * Interval) + (Interval / 2)
+        line.new(bar_index, IntervalUpMidFig, bar_index - 1, IntervalUpMidFig, xloc=xloc.bar_index, extend=extend.both, color=color.gray, width=1, style=line.style_dashed)
+
+        // Lower
+        IntervalDown = floor(close / Interval) * Interval - (counter * Interval)
+        line.new(bar_index, IntervalDown, bar_index - 1, IntervalDown, xloc=xloc.bar_index, extend=extend.both, color=color.gray, width=2, style=line.style_solid) 
+        
+        IntervalDown80 = floor(close / Interval) * Interval - (counter * Interval) - (Interval / 5)
+        line.new(bar_index, IntervalDown80, bar_index - 1, IntervalDown80, xloc=xloc.bar_index, extend=extend.both, color=color.gray, width=1, style=line.style_dotted)
+        
+        IntervalDown20 = floor(close / Interval) * Interval - (counter * Interval) + (Interval / 5)
+        line.new(bar_index, IntervalDown20, bar_index - 1, IntervalDown20, xloc=xloc.bar_index, extend=extend.both, color=color.gray, width=1, style=line.style_dotted)
+        
+        IntervalDownidFig = floor(close / Interval) * Interval - (counter * Interval) - (Interval / 2)
+        line.new(bar_index, IntervalDownidFig, bar_index - 1, IntervalDownidFig, xloc=xloc.bar_index, extend=extend.both, color=color.gray, width=1, style=line.style_dashed) 

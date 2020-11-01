@@ -1,0 +1,30 @@
+//@version=4
+// Made by TPCharts (twitter.com/tradeprophet). Modify as you like, and follow on Twitter for more free goodies!
+study(title="Chad's Alert SMAs (@tradeprophet)", overlay=true)
+
+// Maybe you like looking at daily EMA's on a 4-hour chart, you twisted bastard.
+//timeframe = input(title="EMA timeframe (e.g. 'D' shows daily EMAs on 4h chart)", type=input.resolution, defval="D")
+timeframe =""
+
+// EMA lengths
+smaShorterLength = input(title="Shorter SMA's length", type=input.integer, defval=10)
+smaLongerLength = input(title="Longer SMA's length", type=input.integer, defval=50)
+
+// Shorter EMA Aesthetics
+smaShorterTransparency = input(title="Shorter SMA's Transparency", type=input.integer, defval=80)
+smaShorterWidth = input(title="Shorter SMA's Width", type=input.integer, defval=1)
+
+// Longer EMA Aesthetics
+smaLongerTransparency = input(title="Longer SMA's Transparency", type=input.integer, defval=60)
+smaLongerWidth = input(title="Longer SMA's Width", type=input.integer, defval=1)
+
+// Calculate the EMAs
+smaShorterClose = ema(security(syminfo.tickerid, timeframe, close), smaShorterLength)
+smaLongerClose = ema(security(syminfo.tickerid, timeframe, close), smaLongerLength) 
+
+isCrossover = cross(smaShorterClose, smaLongerClose)
+alertcondition(isCrossover, title="Chad's SMA Crossed", message="{{exchange}}:{{ticker}}'s {{\"emaShorterLength\"}}/{{\"emaLongerLength\"}} SMAs crossed")
+
+// Plot them
+plot(series=smaShorterClose, color=color.black, linewidth=smaShorterWidth, transp=smaShorterTransparency)
+plot(series=smaLongerClose, color=color.black, linewidth=smaLongerWidth, transp=smaLongerTransparency)

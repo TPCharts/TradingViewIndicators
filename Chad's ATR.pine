@@ -1,0 +1,23 @@
+//@version=4
+study("Chad'\s Average True Range [ATR] (@tradeprophet)","Chad\'s ATR (@tradeprophet)", true)
+
+period = input(20, "Period")
+outerMultiplier = input(2, "Outer Multiplier")
+isFillEnabled = input(true, "Fill Between ATR & Outer Bands?")
+isLevelLinesEnabled = input(true, "Show Band Horizontals?")
+
+atrActual = atr(period)
+
+outerSpread = atrActual * outerMultiplier
+
+outerUpper = open + outerSpread
+outerLower = open - outerSpread
+
+upperAtr = plot(open + atrActual, color=color.gray, transp=100, trackprice=isLevelLinesEnabled)
+lowerAtr = plot(open - atrActual, color=color.gray, transp=100, trackprice=isLevelLinesEnabled)
+
+outerUpperBand = plot(open + outerSpread, color=color.gray, linewidth=2, transp=100, trackprice=isLevelLinesEnabled)
+outerLowerBand = plot(open - outerSpread, color=color.gray, linewidth=2, transp=100, trackprice=isLevelLinesEnabled)
+
+fill(upperAtr, outerUpperBand, color.black)
+fill(lowerAtr, outerLowerBand, color.black)

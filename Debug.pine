@@ -1,0 +1,15 @@
+// START DEBUG
+// Usage:
+// Copy/paste into the beginning of your indicator script while developing.
+// ds() - debug a string by showing a label on all candles.
+// dsl() - like ds(), but only shows label on last candle.
+// d() - like (ds), but debugs any value (converts it to a string for you).
+// dl() - like dsl(), but debugs any value (converts it to a string for you).
+
+ds(str) => label.new(bar_index, high, str)
+dsl(str) =>
+    if barstate.islast
+        ds(str)
+d(val) => ds(tostring(val))
+dl(val) => dsl(tostring(val))
+// END DEBUG

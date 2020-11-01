@@ -1,0 +1,11 @@
+//@version=4
+study("Chad's Swing Points (@tradeprophet)", format=format.price, precision=0, overlay=true)
+
+// Define "n" as the number of periods and keep a minimum value of 2 for error handling.
+n = input(title="Periods", defval=2, minval=2, type=input.integer)
+upFractal = (high[n+1]  < high[n]) and (high[n-1] < high[n])
+dnFractal = (low[n+1]  > low[n]) and (low[n-1] > low[n])
+
+// Plot the fractals as shapes on the chart.
+plotshape(dnFractal, style=shape.xcross, location=location.belowbar, offset=-2, color=color.black, transp=80, size = size.tiny)
+plotshape(upFractal, style=shape.xcross,   location=location.abovebar, offset=-2, color=color.black,  transp=80, size = size.tiny)

@@ -1,0 +1,58 @@
+//@version=4
+study("Chad's Alert Levels (@tradeprophet)", overlay=true)
+
+// Monthly
+isOutsideRangeMh = crossover(close, security(syminfo.tickerid, "M", high[1]))
+alertcondition(condition=isOutsideRangeMh, title="M High Cross", message="Crossed over previous monthly high.")
+
+isOutsideRangeMl = crossunder(close, security(syminfo.tickerid, "M", low[1]))
+alertcondition(condition=isOutsideRangeMl, title="M Low Cross", message="Crossed under previous monthly low.")
+
+// Weekly
+isOutsideRangeWh = crossover(close, security(syminfo.tickerid, "W", high[1]))
+alertcondition(condition=isOutsideRangeWh, title="W High Cross",  message="Crossed over previous weekly high.")
+
+isOutsideRangeWl = crossunder(close, security(syminfo.tickerid, "W", low[1]))
+alertcondition(condition=isOutsideRangeWl, title="W Low Cross", message="Crossed under previous weekly low.")
+
+// Daily
+isOutsideRangeDh = crossover(close, security(syminfo.tickerid, "D", high[1]))
+alertcondition(condition=isOutsideRangeDh, title="D High Cross", message="Crossed over previous daily high.")
+
+isOutsideRangeDl = crossunder(close, security(syminfo.tickerid, "D", low[1]))
+alertcondition(condition=isOutsideRangeDl, title="D Low Cross", message="Crossed under previous daily low.")
+
+// 4h
+isOutsideRangeH4h = crossover(close, security(syminfo.tickerid, "240", high[1]))
+alertcondition(condition=isOutsideRangeH4h, title="4h High Cross", message="Crossed over previous 4h high.")
+
+isOutsideRangeH4l = crossunder(close, security(syminfo.tickerid, "240", low[1]))
+alertcondition(condition=isOutsideRangeH4l, title="4h Low Cross", message="Crossed under previous 4h low.")
+
+// 1h
+isOutsideRangeH1h = crossover(close, security(syminfo.tickerid, "60", high[1]))
+alertcondition(condition=isOutsideRangeH1h, title="1h High Cross", message="Crossed over previous 1h high.")
+
+isOutsideRangeH1l = crossunder(close, security(syminfo.tickerid, "60", low[1]))
+alertcondition(condition=isOutsideRangeH1l, title="1h Low Cross", message="Crossed under previous 1h low.")
+
+// 15m
+isOutsideRange15mh = crossover(close, security(syminfo.tickerid, "15", high[1]))
+alertcondition(condition=isOutsideRange15mh, title="15m High Cross", message="Crossed over previous 15m high.")
+
+isOutsideRange15ml = crossunder(close, security(syminfo.tickerid, "15", low[1]))
+alertcondition(condition=isOutsideRange15ml, title="15m Low Cross", message="Crossed under previous 15m low.")
+
+// 5m
+isOutsideRange5mh = crossover(close, security(syminfo.tickerid, "5", high[1]))
+alertcondition(condition=isOutsideRange15mh, title="5m High Cross", message="Crossed over previous 5m high.")
+
+isOutsideRange5ml = crossunder(close, security(syminfo.tickerid, "5", low[1]))
+alertcondition(condition=isOutsideRange15ml, title="5m Low Cross", message="Crossed under previous 5m low.") 
+
+// 2m
+isOutsideRange2mh = crossover(close, security(syminfo.tickerid, "2", high[1]))
+alertcondition(condition=isOutsideRange2mh, title="2m High Cross", message="Crossed over previous 2m high.")
+
+isOutsideRange2ml = crossunder(close, security(syminfo.tickerid, "2", low[1]))
+alertcondition(condition=isOutsideRange2ml, title="2m Low Cross", message="Crossed under previous 2m low.") 

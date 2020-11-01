@@ -1,0 +1,67 @@
+//@version=4
+study("Chad's Swing Points (@tradeprophet)")
+
+// START DEBUG
+ds(str) => label.new(bar_index, high, str)
+dsl(str) =>
+    if barstate.islast
+        ds(str)
+d(val) => ds(tostring(val))
+dl(val) => dsl(tostring(val))
+// END DEBUG
+   
+var lastMinorHighIndex = int(na)
+var lastMinorLowIndex = int(na)
+
+var lastMajorHighIndex = int(na)
+var lastMajorLowIndex = int(na)
+
+var lastDoubleHighIndex = int(na)
+var lastDoubleLowIndex = int(na)
+
+
+isMinorHigh = (high[4] < high[3]) and (high[2] < high[3])
+
+if isMinorHigh
+    lastDoubleHighIndex=lastMinorHighIndex
+    lastMinorHighIndex := bar_index[2]
+
+isMinorLow = (low[4] > low[3]) and (low[2] > low[3])
+
+if isMinorLow
+    lastDoubleLowIndex=lastMinorLowIndex
+    lastMinorLowIndex:= bar_index
+
+
+isMajorHigh = isMinorHigh and (((high[5] < high[3]) and (high[1] < high[3]))
+     or ((high[6] < high[3]) and (high[5] < high[3]) and (high[5] == high[3]) and (high[4] <= high[3]) and (high[2] < high[3]) and (high[1] < high[3]))
+     or ((high[7] < high[3]) and (high[6] < high[3]) and (high[5] == high[3]) and (high[5] == high[3]) and (high[4] <= high[3]) and (high[2] < high[3]) and (high[1] < high[3]))
+     or ((high[8] < high[3]) and (high[7] < high[3]) and (high[6] == high[3]) and (high[5] <= high[3]) and (high[5] == high[3]) and (high[4] <= high[3]) and (high[2] < high[3]) and (high[1] < high[3])))
+
+if isMajorHigh
+    lastMajorHighIndex:= bar_index
+
+
+isMajorLow = isMinorLow and (((high[5] > high[3]) and (high[1] > high[3]))
+     or ((high[5] > high[3]) and (high[5] > high[3]) and (high[4] == high[3]) and (high[2] > high[3]) and (high[1] > high[3]))
+     or ((high[6] > high[3]) and (high[5] > high[3]) and (high[5] == high[3]) and (high[4] >= high[3]) and (high[2] > high[3]) and (high[1] > high[3]))
+     or ((high[7] > high[3]) and (high[6] > high[3]) and (high[5] == high[3]) and (high[5] == high[3]) and (high[4] >= high[3]) and (high[2] > high[3]) and (high[1] > high[3]))
+     or ((high[8] > high[3]) and (high[7] > high[3]) and (high[6] == high[3]) and (high[5] >= high[3]) and (high[5] == high[3]) and (high[4] >= high[3]) and (high[2] > high[3]) and (high[1] > high[3])))
+
+if isMajorLow 
+    lastMajorLowIndex := bar_index
+
+
+isRingHigh = (((high[5] < high[3]) and (high[1] < high[3]))
+     or ((high[6] < high[3]) and (high[5] < high[3]) and (high[5] == high[3]) and (high[4] <= high[3]) and (high[2] < high[3]) and (high[1] < high[3]))
+     or ((high[7] < high[3]) and (high[6] < high[3]) and (high[5] == high[3]) and (high[5] == high[3]) and (high[4] <= high[3]) and (high[2] < high[3]) and (high[1] < high[3]))
+     or ((high[8] < high[3]) and (high[7] < high[3]) and (high[6] == high[3]) and (high[5] <= high[3]) and (high[5] == high[3]) and (high[4] <= high[3]) and (high[2] < high[3]) and (high[1] < high[3])))
+
+
+plotshape(isMinorHigh and not isMajorHigh, style=shape.xcross, location=location.abovebar, offset=-2, color=color.black, transp=61, size = size.tiny)
+plotshape(isMinorLow and not isMajorLow, style=shape.xcross, location=location.belowbar, offset=-2, color=color.black, transp=61, size = size.tiny)
+
+plotshape(isMajorHigh, style=shape.circle, location=location.abovebar, offset=-2, color=color.black, transp=81, size = size.tiny)
+plotshape(isMajorLow, style=shape.circle, location=location.belowbar, offset=-2, color=color.black, transp=81, size = size.tiny)
+
+ds("ML: " + tostring(lastMajorLowIndex) + "\n BI:" + tostring(bar_index))
