@@ -23,6 +23,8 @@ emaShorterClose = ema(security(syminfo.tickerid, timeframe, close), emaShorterLe
 emaLongerClose = ema(security(syminfo.tickerid, timeframe, close), emaLongerLength) 
 
 isCrossover = cross(emaShorterClose, emaLongerClose)
+
+// Sends alerts, but the text is #(%*&@)
 alertcondition(isCrossover, title="Chad's EMA Crossed", message="{{exchange}}:{{ticker}}'s {{\"emaShorterLength\"}}/{{\"emaLongerLength\"}} EMAs crossed")
 
 // Plot them

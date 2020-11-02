@@ -1,5 +1,8 @@
 //@version=4
-study("Chad's Swing Points (@tradeprophet)")
+// Shows traditional fractal lows/highs (two lower/higher lows/highs on each side), as well as three bar lows/highs (one lower/higher low/high on each side)
+// Basically an expansion on the default William's Fractal script to fit PA daytrading strategies.
+// Probably rife with repainting issues, at least for alerts. Use at your own risk.
+study("Chad's Swing Points (@tradeprophet)", overlay=true)
 
 // START DEBUG
 ds(str) => label.new(bar_index, high, str)
@@ -9,59 +12,134 @@ dsl(str) =>
 d(val) => ds(tostring(val))
 dl(val) => dsl(tostring(val))
 // END DEBUG
-   
+
+var miPlotOffset = 2
+var nmiPlotOffset = -1*miPlotOffset
+
+var maPlotOffset = 3
+var nmaPlotOffset = -1*maPlotOffset
+
+var eqPlotOffset = 1
+var neqPlotOffset = -1*eqPlotOffset
+
+// Equal Highs (2 par patterns)
+var isEqualHighShown = input(true, "Show Equal Highs?")
+var isAllEqualHighPriceLabelShown = input(false, "Show All Equal High Price Labels?")
+var isOnlyLastEqualHighPriceLabelShown = input(true, "Show Only Last Equal High Price Label?")
+var lastEqualHighIndex = int(na)
+var lastEqualHighPrice = float(na)
+
+// Equal Lows (2 par patterns)
+var isEqualLowShown = input(true, "Show Equal Lows?")
+var isAllEqualLowPriceLabelShown = input(false, "Show All Equal Low Price Labels?")
+var isOnlyLastEqualLowPriceLabelShown = input(true, "Show Only Last Equal Low Price Label?")
+var lastEqualLowIndex = int(na)
+var lastEqualLowPrice = float(na)
+
+// Minor highs (3 bar pattern)
+var isMinorHighShown = input(true, "Show Minor Highs?")
+var isAllMinorHighPriceLabelShown = input(false, "Show All Minor High Price Labels?")
+var isOnlyLastMinorHighPriceLabelShown = input(true, "Show Only Last Minor High Price Label?")
 var lastMinorHighIndex = int(na)
+var lastMinorHighPrice = float(na)
+
+// Minor lows (3 bar pattern)
+var isMinorLowShown = input(true, "Show Minor Lows?")
+var isAllMinorLowPriceLabelShown = input(false, "Show All Minor Low Price Labels?")
+var isOnlyLastMinorLowPriceLabelShown = input(true, "Show Only Last Minor Low Price Label?")
 var lastMinorLowIndex = int(na)
+var lastMinorLowPrice = float(na)
 
+// Major Highs (5 par patterns)
+var isMajorHighShown = input(true, "Show Major Highs?")
+var isAllMajorHighPriceLabelShown = input(false, "Show All Major High Price Labels?")
+var isOnlyLastMajorHighPriceLabelShown = input(true, "Show Only Last Major High Price Label?")
 var lastMajorHighIndex = int(na)
+var lastMajorHighPrice = float(na)
+
+// Major Lows (5 par patterns)
+var isMajorLowShown = input(true, "Show Major Lows?")
+var isAllMajorLowPriceLabelShown = input(false, "Show All Major Low Price Labels?")
+var isOnlyLastMajorLowPriceLabelShown = input(true, "Show Only Last Major Low Price Label?")
 var lastMajorLowIndex = int(na)
-
-var lastDoubleHighIndex = int(na)
-var lastDoubleLowIndex = int(na)
+var lastMajorLowPrice = float(na)
 
 
-isMinorHigh = (high[4] < high[3]) and (high[2] < high[3])
+//
+// Plot them & create the alerts
+//
+createCurrentBarLabel(barindex, value, under) =>
+    label.new(barindex, value*(under ? 0.999 : 1.001), text=tostring(value), color=color.gray, style=under ? label.style_label_up : label.style_label_down)
 
+createHighLabelAt(barindex, val) => createCurrentBarLabel(barindex, val, false)
+createLowLabelAt(barindex, val) => createCurrentBarLabel(barindex, val, true)
+
+// Equal highs (3 bar pattern)
+isEqualHigh = (high[1] == high[2])
+if isEqualHigh
+    lastEqualHighIndex := bar_index-eqPlotOffset
+    lastEqualHighPrice := high[eqPlotOffset]
+
+plotshape(isEqualHigh, style=shape.xcross, location=location.abovebar, offset=neqPlotOffset, color=color.black, transp=80, size = size.tiny)
+alertcondition(high > lastMinorHighPrice, title="Chad's Equal High Breaks", message="Last equal high broke")
+
+// Equal Lows (3 bar pattern)
+isEqualLow = (low[1] == low[2])
+if isEqualLow
+    lastEqualLowIndex := bar_index-eqPlotOffset
+    lastEqualLowPrice := low[eqPlotOffset]
+
+plotshape(isEqualLow, style=shape.xcross, location=location.belowbar, offset=neqPlotOffset, color=color.black, transp=80, size = size.tiny)
+alertcondition(low < lastMinorLowPrice, title="Chad's Equal Low Breaks", message="Last equal low broke")
+
+//  
+// MINORS
+//
+
+// Minor highs (3 bar pattern)
+testIfMih(i) => (high[i+1] < high[i]) and (high[i-1] < high[i])
+
+isMinorHigh = testIfMih(miPlotOffset) 
 if isMinorHigh
-    lastDoubleHighIndex=lastMinorHighIndex
-    lastMinorHighIndex := bar_index[2]
+    lastMinorHighIndex := bar_index-miPlotOffset
+    lastMinorHighPrice := high[miPlotOffset]
 
-isMinorLow = (low[4] > low[3]) and (low[2] > low[3])
+plotshape(isMinorHigh, style=shape.diamond, location=location.abovebar, offset=nmiPlotOffset, color=color.black, transp=80, size = size.tiny) 
+alertcondition(high > lastMinorHighPrice, title="Chad's Minor High Breaks", message="Last minor high broke")
 
+// Minor lows (3 bar pattern)
+testIfMil(i) => (low[i+1] > low[i]) and (low[i-1] > low[i])
+
+isMinorLow = testIfMil(miPlotOffset) 
 if isMinorLow
-    lastDoubleLowIndex=lastMinorLowIndex
-    lastMinorLowIndex:= bar_index
+    lastMinorLowIndex := bar_index-miPlotOffset
+    lastMinorLowPrice := low[miPlotOffset]
 
+plotshape(isMinorLow, style=shape.diamond, location=location.belowbar, offset=nmiPlotOffset, color=color.black, transp=80, size = size.tiny) 
+alertcondition(low < lastMinorLowPrice, title="Chad's Minor Low Breaks", message="Last minor low broke")
 
-isMajorHigh = isMinorHigh and (((high[5] < high[3]) and (high[1] < high[3]))
-     or ((high[6] < high[3]) and (high[5] < high[3]) and (high[5] == high[3]) and (high[4] <= high[3]) and (high[2] < high[3]) and (high[1] < high[3]))
-     or ((high[7] < high[3]) and (high[6] < high[3]) and (high[5] == high[3]) and (high[5] == high[3]) and (high[4] <= high[3]) and (high[2] < high[3]) and (high[1] < high[3]))
-     or ((high[8] < high[3]) and (high[7] < high[3]) and (high[6] == high[3]) and (high[5] <= high[3]) and (high[5] == high[3]) and (high[4] <= high[3]) and (high[2] < high[3]) and (high[1] < high[3])))
+//
+// MAJORS
+//
+// Major Highs (5 par patterns)
+testIfMah(i) => testIfMih(i) and (high[i+2] < high[i]) and (high[i-2] < high[i])
 
+isMajorHigh = testIfMah(maPlotOffset) 
 if isMajorHigh
-    lastMajorHighIndex:= bar_index
+    lastMajorHighIndex := bar_index-maPlotOffset
+    lastMajorHighPrice := high[maPlotOffset]
+
+plotshape(isMajorHigh, style=shape.circle, location=location.abovebar, offset=nmaPlotOffset, color=color.black, transp=80, size = size.tiny) 
+alertcondition(high > lastMajorHighPrice, title="Chad's Major High Breaks", message="Last major high broke")
 
 
-isMajorLow = isMinorLow and (((high[5] > high[3]) and (high[1] > high[3]))
-     or ((high[5] > high[3]) and (high[5] > high[3]) and (high[4] == high[3]) and (high[2] > high[3]) and (high[1] > high[3]))
-     or ((high[6] > high[3]) and (high[5] > high[3]) and (high[5] == high[3]) and (high[4] >= high[3]) and (high[2] > high[3]) and (high[1] > high[3]))
-     or ((high[7] > high[3]) and (high[6] > high[3]) and (high[5] == high[3]) and (high[5] == high[3]) and (high[4] >= high[3]) and (high[2] > high[3]) and (high[1] > high[3]))
-     or ((high[8] > high[3]) and (high[7] > high[3]) and (high[6] == high[3]) and (high[5] >= high[3]) and (high[5] == high[3]) and (high[4] >= high[3]) and (high[2] > high[3]) and (high[1] > high[3])))
+// Major Lows (5 par patterns)
+testIfMal(i) => testIfMil(i) and (low[i+2] > low[i]) and (low[i-2] > low[i])
 
-if isMajorLow 
-    lastMajorLowIndex := bar_index
+isMajorLow = testIfMal(maPlotOffset)
+if isMajorLow
+    lastMajorLowIndex := bar_index-maPlotOffset
+    lastMajorLowPrice := low[maPlotOffset]
 
-
-isRingHigh = (((high[5] < high[3]) and (high[1] < high[3]))
-     or ((high[6] < high[3]) and (high[5] < high[3]) and (high[5] == high[3]) and (high[4] <= high[3]) and (high[2] < high[3]) and (high[1] < high[3]))
-     or ((high[7] < high[3]) and (high[6] < high[3]) and (high[5] == high[3]) and (high[5] == high[3]) and (high[4] <= high[3]) and (high[2] < high[3]) and (high[1] < high[3]))
-     or ((high[8] < high[3]) and (high[7] < high[3]) and (high[6] == high[3]) and (high[5] <= high[3]) and (high[5] == high[3]) and (high[4] <= high[3]) and (high[2] < high[3]) and (high[1] < high[3])))
-
-
-plotshape(isMinorHigh and not isMajorHigh, style=shape.xcross, location=location.abovebar, offset=-2, color=color.black, transp=61, size = size.tiny)
-plotshape(isMinorLow and not isMajorLow, style=shape.xcross, location=location.belowbar, offset=-2, color=color.black, transp=61, size = size.tiny)
-
-plotshape(isMajorHigh, style=shape.circle, location=location.abovebar, offset=-2, color=color.black, transp=81, size = size.tiny)
-plotshape(isMajorLow, style=shape.circle, location=location.belowbar, offset=-2, color=color.black, transp=81, size = size.tiny)
-
-ds("ML: " + tostring(lastMajorLowIndex) + "\n BI:" + tostring(bar_index))
+plotshape(isMajorLow, style=shape.circle, location=location.belowbar, offset=nmaPlotOffset, color=color.black, transp=80, size = size.tiny) 
+alertcondition(low < lastMajorLowPrice, title="Chad's Major Low Breaks", message="Last major low broke")

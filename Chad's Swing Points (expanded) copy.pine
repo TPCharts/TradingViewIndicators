@@ -1,0 +1,132 @@
+//@version=4
+// Shows traditional fractal lows/highs (two lower/higher lows/highs on each side), as well as three bar lows/highs (one lower/higher low/high on each side)
+// Basically an expansion on the default William's Fractal script to fit PA daytrading strategies.
+// Probably rife with repainting issues, at least for alerts. Use at your own risk.
+study("Chad's Swing Points (@tradeprophet)", overlay=true)
+
+// START DEBUG
+ds(str) => label.new(bar_index, high, str)
+dsl(str) =>
+    if barstate.islast
+        ds(str)
+d(val) => ds(tostring(val))
+dl(val) => dsl(tostring(val))
+// END DEBUG
+
+var plotOffset = 3
+var negativePlotOffset = plotOffset * -1
+
+
+// Minor highs (3 bar pattern)
+var isMinorHighShown = input(true, "Show Minor Highs?")
+var isAllMinorHighPriceLabelShown = input(false, "Show All Minor High Price Labels?")
+var isOnlyLastMinorHighPriceLabelShown = input(true, "Show Only Last Minor High Price Label?")
+var lastMinorHighIndex = int(na)
+var lastMinorHighPrice = float(na)
+
+// Minor lows (3 bar pattern)
+var isMinorLowShown = input(true, "Show Minor Lows?")
+var isAllMinorLowPriceLabelShown = input(false, "Show All Minor Low Price Labels?")
+var isOnlyLastMinorLowPriceLabelShown = input(true, "Show Only Last Minor Low Price Label?")
+var lastMinorLowIndex = int(na)
+var lastMinorLowPrice = float(na)
+
+// Major Highs (5 par patterns)
+var isMajorHighShown = input(true, "Show Major Highs?")
+var isAllMajorHighPriceLabelShown = input(false, "Show All Major High Price Labels?")
+var isOnlyLastMajorHighPriceLabelShown = input(true, "Show Only Last Major High Price Label?")
+var lastMajorHighIndex = int(na)
+var lastMajorHighPrice = float(na)
+
+// Major Lows (5 bar patterns)
+var isMajorLowShown = input(true, "Show Major Lows?")
+var isAllMajorLowPriceLabelShown = input(false, "Show All Major Low Price Labels?")
+var isOnlyLastMajorLowPriceLabelShown = input(true, "Show Only Last Major Low Price Label?")
+var lastMajorLowIndex = int(na)
+var lastMajorLowPrice = float(na)
+
+// Minor highs (3 bar pattern)
+isMinorHigh = (high[3] < high[2]) and (high[1] < high[2])
+
+if isMinorHigh
+    lastMinorHighIndex := bar_index-plotOffset
+    lastMinorHighPrice := high[plotOffset]
+
+// Minor lows (3 bar pattern)
+isMinorLow = (low[3] > low[2]) and (low[1] > low[2])
+
+if isMinorLow
+    lastMinorLowIndex:= bar_index-plotOffset
+    lastMinorLowPrice := low[plotOffset]
+
+// Major Highs (5 par patterns)
+isMajorHigh = isMinorHigh and (((high[5] < high[3]) and (high[1] < high[3]))
+     or ((high[6] < high[3]) and (high[5] < high[3]) and (high[5] == high[3]) and (high[4] <= high[3]) and (high[2] < high[3]) and (high[1] < high[3]))
+     or ((high[7] < high[3]) and (high[6] < high[3]) and (high[5] == high[3]) and (high[5] == high[3]) and (high[4] <= high[3]) and (high[2] < high[3]) and (high[1] < high[3]))
+     or ((high[8] < high[3]) and (high[7] < high[3]) and (high[6] == high[3]) and (high[5] <= high[3]) and (high[5] == high[3]) and (high[4] <= high[3]) and (high[2] < high[3]) and (high[1] < high[3])))
+
+if isMajorHigh
+    lastMajorHighIndex:= bar_index+-plotOffset
+    lastMajorHighPrice := high[plotOffset]
+
+// Major Lows (5 par patterns)
+isMajorLow = isMinorLow and (((low[5] > low[3]) and (low[1] > low[3]))
+     or ((low[5] > low[3]) and (low[5] > low[3]) and (low[4] == low[3]) and (low[2] > low[3]) and (low[1] > low[3]))
+     or ((low[6] > low[3]) and (low[5] > low[3]) and (low[5] == low[3]) and (low[4] >= low[3]) and (low[2] > low[3]) and (low[1] > low[3]))
+     or ((low[7] > low[3]) and (low[6] > low[3]) and (low[5] == low[3]) and (low[5] == low[3]) and (low[4] >= low[3]) and (low[2] > low[3]) and (low[1] > low[3]))
+     or ((low[8] > low[3]) and (low[7] > low[3]) and (low[6] == low[3]) and (low[5] >= low[3]) and (low[5] == low[3]) and (low[4] >= low[3]) and (low[2] > low[3]) and (low[1] > low[3])))
+
+if isMajorLow 
+    lastMajorLowIndex := bar_index-plotOffset
+    lastMajorLowPrice := low[plotOffset]
+
+//
+// Plot them & create the alerts
+//
+createCurrentBarLabel(barindex, value, under) =>
+    label.new(barindex, value*(under ? 0.999 : 1.001), text=tostring(value), color=color.gray, style=under ? label.style_label_up : label.style_label_down)
+
+createHighLabelAt(barindex, val) => createCurrentBarLabel(barindex, val, false)
+createLowLabelAt(barindex, val) => createCurrentBarLabel(barindex, val, true)
+createHighLabel() => createHighLabelAt(bar_index-plotOffset, high[plotOffset])
+createLowLabel() => createLowLabelAt(bar_index-plotOffset, low[plotOffset])
+
+// Minor highs
+plotshape(isMinorHighShown and isMinorHigh and not isMajorHigh, style=shape.xcross, location=location.abovebar, offset=negativePlotOffset+1, color=color.black, transp=60, size = size.tiny)
+alertcondition(high > lastMinorHighPrice, title="Chad's Minor High Breaks", message="Last minor high broke")
+
+if(isAllMinorHighPriceLabelShown and not isOnlyLastMinorHighPriceLabelShown)
+    createHighLabel()
+
+if(isOnlyLastMinorHighPriceLabelShown and barstate.islast)
+    createHighLabelAt(lastMinorHighIndex, lastMinorHighPrice)
+
+// Minor lows
+plotshape(isMinorLowShown and isMinorLow and not isMajorLow, style=shape.xcross, location=location.belowbar, offset=negativePlotOffset+1, color=color.black, transp=60, size = size.tiny)
+alertcondition(low > lastMinorLowPrice, title="Chad's Minor Low Breaks", message="Last minor low broke")
+
+if(isAllMinorLowPriceLabelShown and not isOnlyLastMinorHighPriceLabelShown)
+    createLowLabel()
+
+if(isOnlyLastMinorLowPriceLabelShown and barstate.islast)
+    createLowLabelAt(lastMinorLowIndex, lastMinorLowPrice)
+
+// Major highs
+plotshape(isMajorHighShown and isMajorHigh, style=shape.circle, location=location.abovebar, offset=negativePlotOffset, color=color.black, transp=80, size = size.tiny)
+alertcondition(high > lastMajorHighPrice, title="Chad's Major High Breaks", message="Last major high broke")
+
+if(isAllMajorHighPriceLabelShown and not isOnlyLastMajorHighPriceLabelShown)
+    createHighLabel()
+
+if(isOnlyLastMajorHighPriceLabelShown and barstate.islast)
+    createHighLabelAt(lastMajorHighIndex, lastMajorHighPrice)
+
+// Major Lows
+plotshape(isMajorLowShown and isMajorLow, style=shape.circle, location=location.belowbar, offset=negativePlotOffset, color=color.black, transp=80, size = size.tiny)
+alertcondition(low > lastMajorLowPrice, title="Chad's Major Low Breaks", message="Last major low broke")
+
+if(isAllMajorLowPriceLabelShown and not isOnlyLastMajorLowPriceLabelShown)
+    createLowLabel()
+
+if(isOnlyLastMajorLowPriceLabelShown and barstate.islast)
+    createLowLabelAt(lastMajorLowIndex, lastMajorLowPrice)
