@@ -1,0 +1,100 @@
+//@version=4
+study(title="TPCharts Liquidity Range", overlay=true)
+
+resolution = input(title="Resolution", type=input.resolution, defval="D")
+period = input(title="Period", type=input.integer, defval=3)
+
+isPDHLShown = input(title="Show Previous Day's Highs and Lows?", type=input.bool, defval=true)
+isPDHLLabelShown = input(title="Show PDHL labels?", type=input.bool, defval=true)
+isPDHLLabelDescriptorShown = input(title="Show PDHL Label Descriptor?", type=input.bool, defval=true)
+isPDHLPriceShown = input(title="Show PDHL prices?", type=input.bool, defval=true)
+
+isNumbersShown = input(title="Show Candle Numbers?", type=input.bool, defval=false)
+
+isEQShown = input(title="Show Range EQ?", type=input.bool, defval=true)
+isEQLabelShown = input(title="Show EQ Label?", type=input.bool, defval=true)
+isEQLabelDescriptorShown = input(title="Show EQ Label Descriptor?", type=input.bool, defval=true)
+isEQPriceShown = input(title="Show EQ Price?", type=input.bool, defval=true)
+
+isRangeLabelShown = input(title="Show Range Label?", type=input.bool, defval=true)
+isRangeLabelDescriptorShown = input(title="Show Range Label Descriptor?", type=input.bool, defval=true)
+isRangePriceShown = input(title="Show Range Price?", type=input.bool, defval=true)
+
+isCurrentDay = security(syminfo.tickerid, "D", barstate.islast)
+
+pdh = security(syminfo.tickerid, "D", high[1])
+pdl = security(syminfo.tickerid, "D", low[1])
+tdot = security(syminfo.tickerid, "D", time[1]) 
+
+rangeStartTime = security(syminfo.tickerid, "D", time[period]) 
+
+rangeHighPrice = security(syminfo.tickerid, resolution, highest(high, period+1), lookahead=barmerge.lookahead_on)
+rangeLowPrice = security(syminfo.tickerid, resolution, lowest(low, period+1), lookahead=barmerge.lookahead_on)
+rangeEQPrice = rangeHighPrice - ((rangeHighPrice - rangeLowPrice) / 2)
+
+alertcondition(crossover(high, rangeHighPrice) or crossunder(low, rangeHighPrice), title="Liq range high cross", message="Liq range high cross")
+alertcondition(crossover(high, rangeLowPrice) or crossunder(low, rangerangeLowPriceHighPrice), title="Liq range low cross", message="Liq range low cross")
+alertcondition(crossover(high, rangeEQPrice) or crossunder(low, rangeEQPrice), title="Liq range EQ cross", message="Liq range EQ cross")
+
+
+labelDayOffset = 2
+timelocOffset = time+(86400000 * labelDayOffset)
+
+var eqLabelText = ""
+var pdhLabelText = ""
+var pdlLabelText = ""
+var rangeHighLabelText = ""
+var rangeLowLabelText = ""
+
+
+if isCurrentDay
+    rangeHighLine = line.new(x1=rangeStartTime, y1=rangeHighPrice, x2=timelocOffset, y2=rangeHighPrice, extend=extend.right, color=color.black, xloc=xloc.bar_time)
+    rangeLowLine = line.new(x1=rangeStartTime, y1=rangeLowPrice, x2=timelocOffset, y2=rangeLowPrice, extend=extend.right, color=color.black, xloc=xloc.bar_time)
+
+    if isRangeLabelShown
+        if isRangePriceShown
+            rangeHighLabelText := tostring(rangeHighPrice)
+            rangeLowLabelText := tostring(rangeLowPrice)
+
+        if isRangeLabelDescriptorShown
+            rangeHighLabelText := "Liq Range High" + (rangeHighLabelText == "" ? "" : " (" + rangeHighLabelText + ")") 
+            rangeLowLabelText := "Liq Range Low" + (rangeLowLabelText == "" ? "" : " (" + rangeLowLabelText + ")") 
+
+        rangeHighLabel = label.new(rangeStartTime, rangeHighPrice, text=rangeHighLabelText, style=label.style_none, xloc=xloc.bar_time)
+        rangeLowLabel = label.new(rangeStartTime, rangeLowPrice, text=rangeLowLabelText, style=label.style_none, xloc=xloc.bar_time)
+
+    if isPDHLShown
+        line.new(x1=tdot, y1=pdh, x2=timelocOffset, y2=pdh, extend=extend.right, color=color.black, style=line.style_dotted, width=1, xloc=xloc.bar_time)
+        line.new(x1=tdot, y1=pdl, x2=timelocOffset, y2=pdl, extend=extend.right, color=color.black, style=line.style_dotted, width=1, xloc=xloc.bar_time)
+
+        if isPDHLLabelShown
+            if isPDHLPriceShown
+                pdhLabelText := tostring(pdh)
+                pdlLabelText := tostring(pdl)
+
+            if isPDHLLabelDescriptorShown
+                pdhLabelText := "PDH" + (pdhLabelText == "" ? "" : " (" + pdhLabelText + ")") 
+                pdlLabelText := "PDL" + (pdlLabelText == "" ? "" : " (" + pdlLabelText + ")") 
+
+            if isPDHLLabelShown
+                label.new(timelocOffset, pdh, text=pdhLabelText, style=label.style_none,xloc=xloc.bar_time)
+                label.new(timelocOffset, pdl, text=pdlLabelText, style=label.style_none, xloc=xloc.bar_time)
+
+    if isNumbersShown and timeframe.period == "D"
+        for i=0 to period
+            if i>0
+                label.new(bar_index-i, high[i], tostring(i), color=color.black, yloc=yloc.abovebar, textcolor=color.white)
+
+    if isEQShown
+        line.new(x1=rangeStartTime, y1=rangeEQPrice, x2=timelocOffset, y2=rangeEQPrice, extend=extend.right, color=color.blue, width=1, xloc=xloc.bar_time)
+
+        if isEQLabelShown
+            if isEQPriceShown
+                eqLabelText := tostring(rangeEQPrice)
+
+            if isEQLabelDescriptorShown
+                eqLabelText := "Liq Range EQ" + (eqLabelText == "" ? "" : " (" + eqLabelText + ")") 
+
+            label.new(rangeStartTime, rangeEQPrice, text=eqLabelText, style=label.style_none, color=color.blue, textcolor=color.blue, xloc=xloc.bar_time)
+        
+ 
