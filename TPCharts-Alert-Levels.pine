@@ -1,5 +1,5 @@
 //@version=4
-study("Chad's Alert Levels (@tradeprophet)", overlay=true)
+study("TPCharts Alert Levels", overlay=true)
 
 // Monthly
 isOutsideRangeMh = crossover(close, security(syminfo.tickerid, "M", high[1]))

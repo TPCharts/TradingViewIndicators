@@ -45,6 +45,8 @@ var isOnlyLastMajorLowPriceLabelShown = input(true, "Show Only Last Major Low Pr
 var lastMajorLowIndex = int(na)
 var lastMajorLowPrice = float(na)
 
+
+
 // Minor highs (3 bar pattern)
 isMinorHigh = (high[3] < high[2]) and (high[1] < high[2])
 

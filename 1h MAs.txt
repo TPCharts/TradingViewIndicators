@@ -1,0 +1,35 @@
+//@version=4
+// Do whatever the fuck you want with this. Nothing fancy, just convenient.
+// Intended for the 1h chart.
+study(title="Alert SMAs [1h] (@tradeprophet)", overlay=true)
+
+customPeriod = input(title="Period", type=input.resolution, defval="D")
+
+// 4H
+smaShortestLength = input(title="Shortest SMA's length", type=input.integer, defval=4)
+
+// Daily
+smaShorterLength = input(title="Shorter SMA's length", type=input.integer, defval=24)
+
+// Weekly
+smaLongerLength = input(title="Longer SMA's length", type=input.integer, defval=170)
+
+smaShortest = sma(security(syminfo.tickerid, customPeriod, close), smaShortestLength)
+smaShorter = sma(security(syminfo.tickerid, customPeriod, close), smaShorterLength)
+smaLonger = sma(security(syminfo.tickerid, customPeriod, close), smaLongerLength) 
+
+alertcondition(cross(smaShortest, smaShorter), title="SMA Shortest / Shorter Cross", message="Shortest / Shorter SMA Cross")
+alertcondition(cross(smaShorter, smaLonger), title="SMA Shorter / Longer Cross", message="Shorter / Longer SMA Cross")
+alertcondition(cross(smaShortest, smaLonger), title="SMA Shortest / Longer Cross", message="Shortest / Longer SMA Cross")
+
+alertcondition(crossover(high, smaShortest), title="High crossed shortest SMA", message="High crossed shortest SMA")
+alertcondition(crossover(high, smaShorterLength), title="High crossed shorter SMA", message="High crossed shorter SMA")
+alertcondition(crossover(high, smaLongerLength), title="High crossed longer SMA", message="High crossed longer SMA")
+
+alertcondition(crossover(low, smaShortest), title="Low crossed shortest SMA", message="Low crossed shortest SMA")
+alertcondition(crossover(low, smaShorterLength), title="Low crossed shorter SMA", message="Low crossed shorter SMA")
+alertcondition(crossover(low, smaLongerLength), title="Low crossed longer SMA", message="Low crossed longer SMA")
+
+plot(series=smaShortest, title="Shortest SMA", color=color.black, linewidth=1, transp=80)
+plot(series=smaShorter, title="Shorter SMA", color=color.black, linewidth=1, transp=60)
+plot(series=smaLonger, title="Longer SMA", color=color.black, linewidth=1, transp=40)   

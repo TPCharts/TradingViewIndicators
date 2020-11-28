@@ -1,17 +1,5 @@
 //@version=4
-// Shows traditional fractal lows/highs (two lower/higher lows/highs on each side), as well as three bar lows/highs (one lower/higher low/high on each side)
-// Basically an expansion on the default William's Fractal script to fit PA daytrading strategies.
-// Probably rife with repainting issues, at least for alerts. Use at your own risk.
-study("Chad's Swing Points (@tradeprophet)", overlay=true)
-
-// START DEBUG
-ds(str) => label.new(bar_index, high, str)
-dsl(str) =>
-    if barstate.islast
-        ds(str)
-d(val) => ds(tostring(val))
-dl(val) => dsl(tostring(val))
-// END DEBUG
+study("TPCharts Market Structure", overlay=true)
 
 var miOff = 2
 var nmiOff = -1*miOff
@@ -22,33 +10,38 @@ var nmaOff = -1*maOff
 var eqOff = 1
 var neqOff = -1*eqOff
 
+var lastBullCandleIndex = 0
+var lastBullCandlePrice = float(na)
+var lastBearCandleIndex = 0
+var lastBearCandlePrice = float(na)
+
 // Equal Highs (2 par patterns)
 var isAllEqualHighPriceLabelShown = input(false, "Show All Equal High Price Labels?")
-var isOnlyLastEqualHighPriceLabelShown = input(true, "Show Only Last Equal High Price Label?")
+var isOnlyLastEqualHighPriceLabelShown = input(false, "Show Only Last Equal High Price Label?")
 var lastEqualHighIndex = int(na)
 var lastEqualHighPrice = float(na)
 
 // Equal Lows (2 par patterns)
 var isAllEqualLowPriceLabelShown = input(false, "Show All Equal Low Price Labels?")
-var isOnlyLastEqualLowPriceLabelShown = input(true, "Show Only Last Equal Low Price Label?")
+var isOnlyLastEqualLowPriceLabelShown = input(false, "Show Only Last Equal Low Price Label?")
 var lastEqualLowIndex = int(na)
 var lastEqualLowPrice = float(na)
 
 // Minor highs (3 bar pattern)
 var isAllMinorHighPriceLabelShown = input(false, "Show All Minor High Price Labels?")
-var isOnlyLastMinorHighPriceLabelShown = input(true, "Show Only Last Minor High Price Label?")
+var isOnlyLastMinorHighPriceLabelShown = input(false, "Show Only Last Minor High Price Label?")
 var lastMinorHighIndex = int(na)
 var lastMinorHighPrice = float(na)
 
 // Minor lows (3 bar pattern)
 var isAllMinorLowPriceLabelShown = input(false, "Show All Minor Low Price Labels?")
-var isOnlyLastMinorLowPriceLabelShown = input(true, "Show Only Last Minor Low Price Label?")
+var isOnlyLastMinorLowPriceLabelShown = input(false, "Show Only Last Minor Low Price Label?")
 var lastMinorLowIndex = int(na)
 var lastMinorLowPrice = float(na)
 
 // Major Highs (5 par patterns)
 var isAllMajorHighPriceLabelShown = input(false, "Show All Major High Price Labels?")
-var isOnlyLastMajorHighPriceLabelShown = input(true, "Show Only Last Major High Price Label?")
+var isOnlyLastMajorHighPriceLabelShown = input(false, "Show Only Last Major High Price Label?")
 var lastMajorHighIndex = int(na)
 var lastMajorHighPrice = float(na)
 var lastMajorHighIndex2 = int(na)
@@ -56,20 +49,22 @@ var lastMajorHighPrice2 = float(na)
 
 // Major Lows (5 par patterns)
 var isAllMajorLowPriceLabelShown = input(false, "Show All Major Low Price Labels?")
-var isOnlyLastMajorLowPriceLabelShown = input(true, "Show Only Last Major Low Price Label?")
+var isOnlyLastMajorLowPriceLabelShown = input(false, "Show Only Last Major Low Price Label?")
 var lastMajorLowIndex = int(na)
 var lastMajorLowPrice = float(na)
 var lastMajorLowIndex2 = int(na)
 var lastMajorLowPrice2 = float(na)
 
+var isAllLinesShown = input(false, "Show All Lines?")
+
 //
 // Plot them & create the alerts
 //
-createCurrentBarLabel(barindex, value, under) =>
-    label.new(barindex, value*(under ? 0.999 : 1.001), text=tostring(value), color=color.gray, style=under ? label.style_label_up : label.style_label_down)
+// createCurrentBarLabel(barindex, value, under) =>
+//     label.new(barindex, value*(under ? 0.999 : 1.001), text=tostring(value), color=color.gray, style=under ? label.style_label_up : label.style_label_down)
 
-createHighLabelAt(barindex, val) => createCurrentBarLabel(barindex, val, false)
-createLowLabelAt(barindex, val) => createCurrentBarLabel(barindex, val, true)
+// createHighLabelAt(barindex, val) => createCurrentBarLabel(barindex, val, false)
+// createLowLabelAt(barindex, val) => createCurrentBarLabel(barindex, val, true)
 
 // Equal highs (3 bar pattern)
 isEqualHigh = (high[1] == high[2])
@@ -141,16 +136,67 @@ plotshape(isMajorLow, title="Major Lows", style=shape.circle, location=location.
 alertcondition(low < lastMajorLowPrice, title="Chad's Major Low Breaks", message="Last major low broke")
 
 // Market Structure
-if(lastMajorLowIndex > lastMajorLowIndex2)
-    bullMSB = line.new(x1=lastMajorHighIndex, y1=lastMajorHighPrice, x2=bar_index, y2=lastMajorHighPrice, extend=extend.right)
-    line.delete(bullMSB[1])
-else
-    bullMSB = line.new(x1=lastMajorHighIndex2, y1=lastMajorHighPrice2, x2=bar_index, y2=lastMajorHighPrice2, extend=extend.right)
-    line.delete(bullMSB[1])
+isCandleBull(i) => close[i] > open[i]
+isCandleBear(i) => not isCandleBull(i)
+testIfBullStructure() => lastMajorHighPrice > lastMajorHighPrice2 and lastMajorLowPrice > lastMajorLowPrice2
+testIfBearStructure() => lastMajorLowPrice < lastMajorLowPrice2 and lastMajorHighPrice < lastMajorHighPrice2
 
-if(lastMajorHighIndex < lastMajorHighIndex2)
-    bearMSB = line.new(x1=lastMajorLowIndex, y1=lastMajorLowPrice, x2=bar_index, y2=lastMajorLowPrice, extend=extend.right)
-    line.delete(bearMSB[1])
-else
-    bearMSB = line.new(x1=lastMajorLowIndex2, y1=lastMajorLowPrice2, x2=bar_index, y2=lastMajorLowPrice2, extend=extend.right)
-    line.delete(bearMSB[1])
+float lastBearCandleHigh = float(na)
+float lastBearCandleLow = float(na)
+float lastBearCandleMid = float(na)
+float lastBullCandleHigh = float(na)
+float lastBullCandleLow = float(na)
+float lastBullCandleMid = float(na)
+line bullMSB = na
+line bearMSB = na
+line lastBearCandleMidLine = na
+line lastBearCandleLine = na
+// bearMSCcount = cum(close >= open ? 1 : 0)
+// bullMSCcount = cum(close >= open ? 1 : 0)
+
+bearMSCcount = 0
+bullMSCcount = 0
+
+isBullStructure = testIfBullStructure()
+if isBullStructure
+    bearMSB = line.new(x1=lastMajorLowIndex2, y1=lastMajorLowPrice2, x2=lastMajorLowIndex2+1, y2=lastMajorLowPrice2, extend=extend.right, color=color.red)
+    if not isAllLinesShown
+        line.delete(bearMSB[1])
+    
+    line.delete(lastBearCandleLine)
+    line.delete(lastBearCandleMidLine)
+
+
+    if isCandleBear(1)
+        lastBearCandleHigh = high[1]
+        lastBearCandleLow = low[1]
+        lastBearCandleMid = low[1] + ((lastBearCandleHigh - lastBearCandleLow) / 2)
+
+        lastBearCandleMidLine = line.new(x1=bar_index-1, y1=lastBearCandleMid, x2=bar_index, y2=lastBearCandleMid, extend=extend.right, color=color.gray)
+        line.delete(lastBearCandleMidLine[1])
+        
+        lastBearCandleLine = line.new(x1=bar_index-1, y1=open[1], x2=bar_index, y2=open[1], extend=extend.right, color=color.blue)
+        line.delete(lastBearCandleLine[1])
+
+
+alertcondition(isBullStructure and (close < lastMajorLowPrice2), title="Chad's Bearish MSB", message="Bearish MSB")
+
+isBearStructure = testIfBearStructure()
+if isBearStructure
+    bullMSB = line.new(x1=lastMajorHighIndex2, y1=lastMajorHighPrice2, x2=lastMajorHighIndex2+1, y2=lastMajorHighPrice2, extend=extend.right, color=color.green)
+    if not isAllLinesShown
+        line.delete(bullMSB[1])
+
+    if isCandleBull(1)
+        lastBullCandleHigh = high[1]
+        lastBullCandleLow = low[1]
+        lastBullCandleMid = low[1] + ((lastBullCandleHigh - lastBullCandleLow) / 2)
+
+        lastBullCandleMidLine = line.new(x1=bar_index-1, y1=lastBullCandleMid, x2=bar_index, y2=lastBullCandleMid, extend=extend.right, color=color.gray)
+        line.delete(lastBullCandleMidLine[1])
+        
+        lastBullCandleLine = line.new(x1=bar_index-1, y1=close[1], x2=bar_index, y2=close[1], extend=extend.right, color=color.blue)
+        line.delete(lastBullCandleLine[1])
+
+
+alertcondition(isBearStructure and (close > lastMajorHighPrice2), title="Chad's Bullish MSB", message="Bullish MSB")

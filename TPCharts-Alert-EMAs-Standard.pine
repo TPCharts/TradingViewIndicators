@@ -1,0 +1,20 @@
+//@version=4
+// Made by TPCharts (twitter.com/tradeprophet). Modify as you like, and follow on Twitter for more free goodies!
+study(title="TPCharts Alert EMAs (standard)", overlay=true)
+
+customPeriod = input(title="Period", type=input.resolution, defval="D")
+emaShortestLength = input(title="Shortest EMA's length", type=input.integer, defval=9)
+emaShorterLength = input(title="Shorter EMA's length", type=input.integer, defval=18)
+emaLongerLength = input(title="Longer EMA's length", type=input.integer, defval=40)
+
+emaShortest = ema(security(syminfo.tickerid, customPeriod, close), emaShortestLength)
+emaShorter = ema(security(syminfo.tickerid, customPeriod, close), emaShorterLength)
+emaLonger = ema(security(syminfo.tickerid, customPeriod, close), emaLongerLength) 
+
+alertcondition(cross(emaShortest, emaShorter), title="EMA Shortest / Shorter Cross", message="{{ticker}}: Shortest / Shorter EMA Cross")
+alertcondition(cross(emaShorter, emaLonger), title="EMA Shorter / Longer Cross", message="{{ticker}}: Shorter / Longer EMA Cross")
+alertcondition(cross(emaShortest, emaLonger), title="EMA Shortest / Longer Cross", message="{{ticker}}: Shortest / Longer EMA Cross")
+
+plot(series=emaShortest, title="Shortest EMA", color=color.black, linewidth=1, transp=80)
+plot(series=emaShorter, title="Shorter EMA", color=color.black, linewidth=1, transp=60)
+plot(series=emaLonger, title="Longer EMA", color=color.black, linewidth=1, transp=40)

@@ -5,6 +5,7 @@
 // dsl() - like ds(), but only shows label on last candle.
 // d() - like (ds), but debugs any value (converts it to a string for you).
 // dl() - like dsl(), but debugs any value (converts it to a string for you).
+// Example: ds(BI:" + tostring(bar_index))
 
 ds(str) => label.new(bar_index, high, str)
 dsl(str) =>

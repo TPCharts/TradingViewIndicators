@@ -1,0 +1,117 @@
+//@version=4
+//
+// This version uses Pine Script v4 line objects which has a limit of 50 bars.
+// See https://www.tradingview.com/pine-script-docs/en/v4/essential/Drawings.html#total-number-of-drawings
+//
+// =-=-=-=-=-=-=-=-=-
+//
+// Average Daily Range (ADR) Indicator for TradingView
+// This script is based on the "Best ADR Indicator for MT4" described at https://www.fxdayjob.com/best-adr-indicator-mt4.
+// by Sherwin Daganato, 20171119
+// https://github.com/sherwind/pinescript-adr
+//
+// Inputs:
+//
+// ADR display limit - Set the number of historical ADR to display. The default value is 7 calendar days.
+//                     Non-trading days are not taken into account. 
+//                     A value of 7, for example, would display only 5 ADR for a 24x5 market.
+// AWR display limit - Set the number of historical AWR to display. The default value is 0 calendar weeks.
+// AMR display limit - Set the number of historical AMR to display. The default value is 0 calendar months.
+// AYR display limit - Set the number of historical AYR to display. The default value is 0 calendar years.
+// ADR Length parameter - Set the length parameter of ADR. The default value is 5.
+// WDR Length parameter - Set the length parameter of AWR. The default value is 5.
+// MDR Length parameter - Set the length parameter of AMR. The default value is 1.
+// YDR Length parameter - Set the length parameter of AYR. The default value is 1.
+//
+study(title="TPCharts ADR", overlay=true)
+
+is_forex_pips = input(title="Display average range as forex pips?", type=input.bool, defval=true)
+daily_adr = input(title="ADR display limit", type=input.integer, defval=5, minval=0)
+weekly_adr = input(title="AWR display limit", type=input.integer, defval=0, minval=0)
+monthly_adr = input(title="AMR display limit", type=input.integer, defval=0, minval=0)
+yearly_adr = input(title="AYR display limit", type=input.integer, defval=0, minval=0)
+daily_adr_length = input(title="ADR Length parameter", type=input.integer, defval=5, minval=0)
+weekly_adr_length = input(title="AWR Length parameter", type=input.integer, defval=5, minval=0)
+monthly_adr_length = input(title="AMR Length parameter", type=input.integer, defval=1, minval=0)
+yearly_adr_length = input(title="AYR Length parameter", type=input.integer, defval=1, minval=0)
+
+labelDayOffset = 2
+timelocOffset = time+(86400000 * labelDayOffset)
+timelocOffsetDayEnd = security(syminfo.tickerid, "D", time) + 86400000 
+timelocCurrentDay = security(syminfo.tickerid, "D", time) 
+
+new_bar(res) =>
+    change(time(res)) != 0
+adr(length) =>
+    range = high - low
+    sma(range[1], length)
+adr_high(adr) =>
+    high - low < adr ? low + adr : close >= open ? low + adr : high
+adr_low(adr) =>
+    high - low < adr ? high - adr : close >= open ? low : high - adr
+to_pips(val) =>
+    is_forex_pips ? val/syminfo.mintick/10 : val/syminfo.mintick
+draw_adr_hilo(hi_level, lo_level, res, adr, level_color) =>
+    var line hi_line = na
+    var line lo_line = na
+    if new_bar(res)
+        hi_line := line.new(x1=timelocCurrentDay, y1=hi_level, x2=timelocOffsetDayEnd, y2=hi_level, extend=extend.right, color=level_color, xloc=xloc.bar_time)
+        lo_line := line.new(x1=timelocCurrentDay, y1=lo_level, x2=timelocOffsetDayEnd, y2=lo_level, extend=extend.right, color=level_color, xloc=xloc.bar_time)
+        label.new(timelocOffset, hi_level, "ADR H: " + tostring(to_pips(adr)), style=label.style_none, xloc=xloc.bar_time)
+        label.new(timelocOffset, lo_level, "ADR L: " + tostring(to_pips(adr)), style=label.style_none, xloc=xloc.bar_time)
+    if not na(hi_line) and line.get_x2(hi_line) != bar_index
+        line.set_x2(hi_line, bar_index)
+        line.set_x2(lo_line, bar_index)
+
+
+//
+// Daily
+//
+
+day_adr      = security(syminfo.tickerid, 'D', adr(daily_adr_length), lookahead=barmerge.lookahead_on)
+day_adr_high = security(syminfo.tickerid, 'D', adr_high(day_adr), lookahead=barmerge.lookahead_on)
+day_adr_low  = security(syminfo.tickerid, 'D', adr_low(day_adr), lookahead=barmerge.lookahead_on)
+one_day = 1000 * 60 * 60 * 24
+
+isCurrentDay = security(syminfo.tickerid, "D", barstate.islast)
+if isCurrentDay
+    line.new(x1=timelocCurrentDay, y1=day_adr_high, x2=timelocOffsetDayEnd, y2=day_adr_high, extend=extend.right, color=color.black, xloc=xloc.bar_time)
+    line.new(x1=timelocCurrentDay, y1=day_adr_low, x2=timelocOffsetDayEnd, y2=day_adr_low, extend=extend.right, color=color.black, xloc=xloc.bar_time)
+    label.new(timelocCurrentDay, day_adr_high, "ADR H: " + tostring(to_pips(day_adr)) + " ("+tostring(day_adr_high)+")", style=label.style_none, xloc=xloc.bar_time)
+    label.new(timelocCurrentDay, day_adr_low, "ADR L: " + tostring(to_pips(day_adr)) + " ("+tostring(day_adr_low)+")", style=label.style_none, xloc=xloc.bar_time)
+
+// if ((timeframe.isintraday or timeframe.isdaily) and daily_adr > 0 and timenow - time < one_day * daily_adr)
+//     draw_adr_hilo(day_adr_high, day_adr_low, 'D', day_adr, color.black)
+
+    
+// //
+// // Weekly
+// //
+// week_adr      = security(syminfo.tickerid, 'W', adr(weekly_adr_length), lookahead=barmerge.lookahead_on)
+// week_adr_high = security(syminfo.tickerid, 'W', adr_high(week_adr), lookahead=barmerge.lookahead_on)
+// week_adr_low  = security(syminfo.tickerid, 'W', adr_low(week_adr), lookahead=barmerge.lookahead_on)
+// one_week = one_day * 7
+// if ((timeframe.isintraday or timeframe.isdaily or timeframe.isweekly) and weekly_adr > 0 and timenow - time < one_week * weekly_adr)
+//     draw_adr_hilo(week_adr_high, week_adr_low, 'W', week_adr, color.orange)
+
+
+// //
+// // Monthly
+// //
+// month_adr      = security(syminfo.tickerid, 'M', adr(monthly_adr_length), lookahead=barmerge.lookahead_on)
+// month_adr_high = security(syminfo.tickerid, 'M', adr_high(month_adr), lookahead=barmerge.lookahead_on)
+// month_adr_low  = security(syminfo.tickerid, 'M', adr_low(month_adr), lookahead=barmerge.lookahead_on)
+// one_month = one_day * 30
+// if ((timeframe.isintraday or timeframe.isdwm) and monthly_adr > 0 and timenow - time < one_month * monthly_adr)
+//     draw_adr_hilo(month_adr_high, month_adr_low, 'M', month_adr, color.fuchsia)
+
+
+// //
+// // Yearly
+// //
+// year_adr      = security(syminfo.tickerid, '12M', adr(yearly_adr_length), lookahead=barmerge.lookahead_on)
+// year_adr_high = security(syminfo.tickerid, '12M', adr_high(year_adr), lookahead=barmerge.lookahead_on)
+// year_adr_low  = security(syminfo.tickerid, '12M', adr_low(year_adr), lookahead=barmerge.lookahead_on)
+// one_year = one_day * 365
+// if (yearly_adr > 0 and timenow - time < one_year * yearly_adr)
+//     draw_adr_hilo(year_adr_high, year_adr_low, '12M', year_adr, color.red)

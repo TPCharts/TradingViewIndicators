@@ -1,23 +1,67 @@
 //@version=4
 study("Chad'\s Average True Range [ATR] (@tradeprophet)","Chad\'s ATR (@tradeprophet)", true)
 
+ds(str) => label.new(bar_index, high, str)
+dsl(str) =>
+    if barstate.islast
+        ds(str)
+d(val) => ds(tostring(val))
+dl(val) => dsl(tostring(val))
+
+
 period = input(20, "Period")
+isOuterPlotShown = input(false, "Show Outer Plot?")
+isOuterBandLinesShown = input(true, "Show Outer Band Lines?")
+isATRLinesShown = input(true, "Show ATR Lines?")
 outerMultiplier = input(2, "Outer Multiplier")
-isFillEnabled = input(true, "Fill Between ATR & Outer Bands?")
-isLevelLinesEnabled = input(true, "Show Band Horizontals?")
 
-atrActual = atr(period)
+dailyOpen = security(syminfo.tickerid, "D", open)
 
+atrPeriod = input(20, minval=1, title='ATR Period')
+atrActual = security(syminfo.tickerid, "D", atr(atrPeriod))
 outerSpread = atrActual * outerMultiplier
 
-outerUpper = open + outerSpread
-outerLower = open - outerSpread
+upperATRPrice = dailyOpen + atrActual
+lowerATRPrice = dailyOpen - atrActual
 
-upperAtr = plot(open + atrActual, color=color.gray, transp=100, trackprice=isLevelLinesEnabled)
-lowerAtr = plot(open - atrActual, color=color.gray, transp=100, trackprice=isLevelLinesEnabled)
 
-outerUpperBand = plot(open + outerSpread, color=color.gray, linewidth=2, transp=100, trackprice=isLevelLinesEnabled)
-outerLowerBand = plot(open - outerSpread, color=color.gray, linewidth=2, transp=100, trackprice=isLevelLinesEnabled)
+// ATR Lines & Labels
+upperATRLine = line.new(x1=bar_index-1, y1=upperATRPrice, x2=bar_index, y2=upperATRPrice, extend=extend.right, color=color.black)
+line.delete(upperATRLine[1])
 
-fill(upperAtr, outerUpperBand, color.black)
-fill(lowerAtr, outerLowerBand, color.black)
+upperATRLabel = label.new(bar_index, upperATRPrice, text="D ATR", style=label.style_none)
+label.delete(upperATRLabel[1])
+
+lowerATRLine = line.new(x1=bar_index-1, y1=lowerATRPrice, x2=bar_index, y2=lowerATRPrice, extend=extend.right, color=color.black)
+line.delete(lowerATRLine[1])
+
+lowerATRLabel = label.new(bar_index, lowerATRPrice, text="D ATR", style=label.style_none)
+label.delete(lowerATRLabel[1])
+
+//
+// Outer ATR Lines & Labels
+//
+
+// Upper
+upperATRBandPrice = upperATRPrice + outerSpread
+// upperATRBandPlot = plot(upperATRBandPrice, color=color.gray, linewidth=2, transp=100)
+// upperATRPlot = plot(upperATRPrice, color=color.gray, linewidth=2, transp=100)
+// fill(upperATRBandPlot, upperATRPlot, color.black)
+
+upperATRBandLine = line.new(x1=bar_index-1, y1=upperATRBandPrice, x2=bar_index, y2=upperATRBandPrice, extend=extend.right, color=color.black)
+line.delete(upperATRBandLine[1])
+
+upperATRBandLabel = label.new(bar_index, upperATRBandPrice, text="D ATR BAND", style=label.style_none)
+label.delete(upperATRBandLabel[1])
+
+// Lower
+lowerATRBandPrice = lowerATRPrice - outerSpread
+// lowerATRBandPlot = plot(lowerATRBandPrice, color=color.gray, linewidth=2, transp=100)
+// lowerATRPlot = plot(lowerATRPrice, color=color.gray, linewidth=2, transp=100)
+// fill(lowerATRBandPlot, lowerATRPlot, color.black)
+
+lowerATRBandLine = line.new(x1=bar_index-1, y1=lowerATRBandPrice, x2=bar_index, y2=lowerATRBandPrice, extend=extend.right, color=color.black)
+line.delete(lowerATRBandLine[1])
+
+lowerATRBandLabel = label.new(bar_index, lowerATRBandPrice, text="D ATR BAND", style=label.style_none)
+label.delete(lowerATRBandLabel[1])

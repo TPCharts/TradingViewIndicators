@@ -1,0 +1,121 @@
+//@version=4
+
+study(title="TPCharts Daily Opens", overlay=true)
+
+isNYOpenShown = input(title="Show NY Open?", type=input.bool, defval=true)
+isNYOpenPriceShown = input(title="Show NY Open Price?", type=input.bool, defval=false)
+isSTDOpenShown = input(title="Show Standard Open?", type=input.bool, defval=true)
+isSTDOpenPriceShown = input(title="Show Standard Open Price?", type=input.bool, defval=false)
+isTuEntryShown = input(title="Show Tu Entry?", type=input.bool, defval=true)
+isTuEntryOpenPriceShown = input(title="Show Tu Entry Open Price?", type=input.bool, defval=false)
+isMoEntryShown = input(title="Show Mo Entry?", type=input.bool, defval=true)
+isMoEntryOpenPriceShown = input(title="Show Mo Entry Open Price?", type=input.bool, defval=false)
+
+
+stdDayOpenTime = security(syminfo.tickerid, "D", time, lookahead=barmerge.lookahead_on) 
+stdDayOpenPrice = security(syminfo.tickerid, "D", open) 
+
+// Get NY open price
+nyOpenTime = timestamp(year(timenow), month(timenow), dayofmonth(timenow), 0, 0)
+float l = na
+if time >= nyOpenTime and na(l[1])
+    l := open
+else
+    l := l[1]
+
+openPriceNY = l[0]
+
+// Get TU entry price
+float tuEntry = na
+int tuEntryTimestamp = timestamp(year(timenow), month(timenow), dayofmonth(timenow) - dayofweek(timenow) + dayofweek.tuesday, 4, 0)
+if dayofweek(timenow) > dayofweek.monday
+    if time >= tuEntryTimestamp and na(tuEntry[1])
+        tuEntry := open
+    else
+        tuEntry := tuEntry[1]
+
+openPriceTuEntry = tuEntry[0]
+
+// Get Mo entry price
+float moEntry = na
+int moEntryTimestamp = timestamp(year(timenow), month(timenow), dayofmonth(timenow) - dayofweek(timenow) + dayofweek.monday, 4, 0)
+if dayofweek(timenow) > dayofweek.sunday
+    if time >= moEntryTimestamp and na(moEntry[1])
+        moEntry := open
+    else
+        moEntry := moEntry[1]
+
+openPriceMoEntry = moEntry[0]
+    
+
+isCurrentDay = security(syminfo.tickerid, "D", barstate.islast)
+
+var labelNY = "DO (NY)"
+var labelSTD = "DO (STD)"
+var labelTuEntry = "Tu Entry"
+var labelMoEntry = "Mo OSOK Entry"
+
+line lineMo = na
+label labelMo = na
+
+line lineTu = na
+label labelTu = na
+
+line lineDOSTD = na
+label labelDOSTD = na
+
+line lineDONY = na
+label labelDONY = na
+
+if isCurrentDay and timeframe.isintraday
+   
+    if isNYOpenShown and not dayofweek(timenow) == dayofweek.saturday or dayofweek(timenow) == dayofweek.sunday
+  
+        lineDONY := line.new(x1=nyOpenTime, y1=openPriceNY, x2=nyOpenTime+86400000, y2=openPriceNY, extend=extend.none, color=color.black, xloc=xloc.bar_time)
+        line.delete(lineDONY[1])
+
+        if isNYOpenPriceShown
+            labelNY := labelNY + " [" + tostring(openPriceNY) + "]"
+        
+        labelDONY := label.new(nyOpenTime+86400000, openPriceNY, labelNY, style=label.style_none, xloc=xloc.bar_time)
+        label.delete(labelDONY[1])
+
+    if isSTDOpenShown
+        lineDOSTD := line.new(x1=stdDayOpenTime, y1=stdDayOpenPrice, x2=stdDayOpenTime+86400000, y2=stdDayOpenPrice, extend=extend.none, color=color.black, xloc=xloc.bar_time)
+        line.delete(lineDOSTD[1])
+
+        if isSTDOpenPriceShown
+            labelSTD := labelSTD + " [" + tostring(stdDayOpenPrice) + "]"
+        
+        labelDOSTD := label.new(stdDayOpenTime+86400000, stdDayOpenPrice, labelSTD, style=label.style_none, xloc=xloc.bar_time)
+        label.delete(labelDOSTD[1])
+
+    if isTuEntryShown
+        tuEntryOffset = (86400000/24*31)
+        lineTu := line.new(x1=tuEntryTimestamp, y1=openPriceTuEntry, x2=tuEntryTimestamp+tuEntryOffset, y2=openPriceTuEntry, extend=extend.none, color=color.black, xloc=xloc.bar_time)
+        line.delete(lineTu[1])
+
+        if isTuEntryOpenPriceShown
+            labelTuEntry := labelTuEntry + " [" + tostring(openPriceTuEntry) + "]"
+        
+        label.new(tuEntryTimestamp+tuEntryOffset, openPriceTuEntry, labelTuEntry, style=label.style_none, xloc=xloc.bar_time)
+        label.delete(labelTu[1])
+
+    if isMoEntryShown
+        moEntryOffset = (86400000*4 + 86400000/24*13)
+        line.new(x1=moEntryTimestamp, y1=openPriceMoEntry, x2=moEntryTimestamp+moEntryOffset, y2=openPriceMoEntry, extend=extend.none, color=color.black, xloc=xloc.bar_time)
+        line.delete(lineMo[1])
+
+        if isMoEntryOpenPriceShown
+            labelMoEntry := labelMoEntry + " [" + tostring(openPriceMoEntry) + "]"
+        
+        label.new(moEntryTimestamp+moEntryOffset, openPriceMoEntry, labelMoEntry, style=label.style_none, xloc=xloc.bar_time)
+        label.delete(labelMo[1])
+
+alertcondition(crossover(high, openPriceNY) or crossunder(low, openPriceNY), title="NY D Open Cross", message="NY D Open Cross")
+alertcondition(crossover(high, stdDayOpenPrice) or crossunder(low, stdDayOpenPrice), title="Standard D Open Cross", message="Standard D Open Cross")
+alertcondition(crossover(high, openPriceTuEntry) or crossunder(low, openPriceTuEntry), title="Tu Entry Open Cross", message="Tu Entry Open Cross")
+alertcondition(crossover(high, openPriceMoEntry) or crossunder(low, openPriceMoEntry), title="Mo Entry Open Cross", message="Mo Entry Open Cross")
+
+// DEBUG
+//label.new(bar_index, open, tostring(openPriceNY), style=label.style_none)

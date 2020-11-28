@@ -1,5 +1,5 @@
 //@version=4
-study("Chad's Figures (@tradeprophet)", overlay=true)
+study("TPCharts Figures", overlay=true)
 
 var number_of_lines = input(5, title="Total", type=input.integer)
 
