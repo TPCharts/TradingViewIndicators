@@ -1,0 +1,159 @@
+//@version=4
+
+study("TPCharts COT")
+src = close
+bFX = false 
+sCalc  = "MARKETS"
+bTotal = (sCalc == "MARKETS")
+sHead = "QUANDL:CFTC/"
+sLong = "_F_L_ALL|4"
+sShort = "_F_L_ALL|5"
+iWidth = 2
+bTotal2 = (sCalc == "NON-COMS")
+sHead2  = "QUANDL:CFTC/"
+sLong2  = "_F_L_ALL|1"
+sShort2 = "_F_L_ALL|2"
+iWidth2 = 2
+sCode1 =
+         syminfo.root == "ZB" ? "020601" :  
+         syminfo.root == "ZN" ? "043602" :
+         syminfo.root == "ZQ" ? "045601" :
+         syminfo.root == "ZT" ? "042601" :
+         syminfo.root == "ZS" ? "005602" :
+         syminfo.root == "DC" ? "052641" :
+         syminfo.root == "GF" ? "061641" :
+         syminfo.root == "LBS" ? "058643" :
+         syminfo.root == "QG" ? "023655" :
+         syminfo.root == "QM" ? "067655" :
+         syminfo.root == "SOYBNUSD" ? "005602" :
+	     syminfo.root == "ZM" ? "026603" :  
+	     syminfo.root == "ZL" ? "007601" :  
+	     syminfo.root == "ZC" ? "002602" :  
+	     syminfo.root == "CORNUSD" ? "002602" :
+	     syminfo.root == "ZW" ? "001602" :  
+	     syminfo.root == "WHEATUSD" ? "001602" :
+	     syminfo.root == "KE" ? "001612" :  
+	     syminfo.root == "HE" ? "054642" :  
+	     syminfo.root == "LE" ? "057642" :  
+	     syminfo.root == "GC" ? "088691" :  
+	     syminfo.root == "XAUUSD" ? "088691" :
+	     syminfo.root == "SI" ? "084691" : 
+	     syminfo.root == "XAGUSD" ? "084691" :
+	     syminfo.root == "HG" ? "085692" :
+	     syminfo.root == "XCUUSD" ? "085692" :
+	     syminfo.root == "CL" ? "067651" :  
+	     syminfo.root == "WTICOUSD" ? "067651" : 
+	     syminfo.root == "BCOUSD" ? "06765T" :
+	     syminfo.root == "HO" ? "022651" :  
+	     syminfo.root == "RB" ? "111659" :  
+	     syminfo.root == "NG" ? "023651" :  
+	     syminfo.root == "NATGASUSD" ? "023651" :
+	     syminfo.root == "A6" ? "232741" :  
+	     syminfo.root == "6A" ? "232741" :
+	     syminfo.root == "AUDUSD" ? "232741" :
+	     syminfo.root == "B6" ? "096742" : 
+	     syminfo.root == "6B" ? "096742" : 
+	     syminfo.root == "6C" ? "090741" :
+	     syminfo.root == "CADUSD" ? "090741" :
+	     syminfo.root == "USDCAD" ? "090741" :
+	     syminfo.root == "GBPUSD" ? "096742" :
+	     syminfo.root == "D6" ? "090741" :  
+	     syminfo.root == "CADUSD" ? "090741" :
+	     syminfo.root == "6Z" ? "122741" :
+	     syminfo.root == "ZARUSD" ? "122741" :
+	     syminfo.root == "E6" ? "099741" :
+	     syminfo.root == "6E" ? "099741" :
+	     syminfo.root == "EURUSD" ? "099741" :
+	     syminfo.root == "J6" ? "097741" :  
+	     syminfo.root == "6J" ? "097741" : 
+	     syminfo.root == "JPYUSD" ? "097741" :
+	     syminfo.root == "S6" ? "092741" : 
+	     syminfo.root == "6S" ? "092741" : 
+	     syminfo.root == "CHFUSD" ? "092741" :
+	     syminfo.root == "SB" ? "080732" :  
+	     syminfo.root == "SUGARUSD" ? "080732" :
+	     syminfo.root == "KC" ? "083731" :  
+	     syminfo.root == "CC" ? "073732" :  
+	     syminfo.root == "6N" ? "112741" : 
+	     syminfo.root == "6S" ? "092741" : 
+	     syminfo.root == "CT" ? "033661" :  
+	     syminfo.root == "ES" ? "13874A" :  
+	     syminfo.root == "SPX500USD" ? "13874A" :
+	     syminfo.root == "SP" ? "13874A" :
+	     syminfo.root == "RTY" ? "239742" : 
+	     syminfo.root == "YM" ? "12460P" :  
+	     syminfo.root == "NQ" ? "209742" : 
+	     syminfo.root == "NAS100USD" ? "209742" :
+	     syminfo.root == "PA" ? "075651" : 
+	     syminfo.root == "XPDUSD" ? "075651" :
+	     syminfo.root == "PL" ? "076651" : 
+	     syminfo.root == "XPTUSD" ? "076651" : 
+	     syminfo.root == "VX" ? "1170E1" :
+	     syminfo.root == "M6" ? "095741" :
+	     syminfo.root == "6M" ? "095741" :
+	     syminfo.root == "USDMXN" ? "095741" :
+	     syminfo.root == "MXNUSD" ? "095741" :
+	     syminfo.root == "BTCUSD" ? "133741" :
+	     syminfo.root == "BTCUSDT" ? "133741" :
+	     syminfo.root == "BTCUSDC" ? "133741" :
+	     syminfo.root == "XBTUSD" ? "133741" :
+         ""
+//Titles
+
+sTitle1 =  "MARKETS" 
+dLong(asCode) =>  security(sHead + asCode + (sLong),   "W", close, lookahead=barmerge.lookahead_on)
+dShort(asCode) => security(sHead +asCode + (sShort),   "W", close, lookahead=barmerge.lookahead_on)
+_pos_coms_short = dShort(sCode1)
+_pos_coms_long  = dLong (sCode1)
+net_com = _pos_coms_long - _pos_coms_short
+periodExtreme = input(title="Period", defval=52/2, options=[52/2, 52, 52*4])
+
+hline(0)
+
+netComExtremeHigh = highest(net_com, periodExtreme)
+netComExtremeLow = lowest(net_com, periodExtreme)
+
+isAllStatsShown = input(title="Show all stats?", type=input.bool, defval=true)
+isSummaryLabelShown = input(title="Show summary label?", type=input.bool, defval=true)
+
+high4Y = highest(net_com, 52*4)
+low4Y = lowest(net_com, 52*4)
+eq4Y = high4Y - ((high4Y - low4Y) / 2)
+dif4Y = net_com - eq4Y
+
+high1Y = highest(net_com, 52)
+low1Y = lowest(net_com, 52)
+eq1Y = high1Y - ((high1Y - low1Y) / 2)
+dif1Y = net_com - eq1Y
+
+high6M = highest(net_com, 26)
+low6M = lowest(net_com, 26)
+eq6M = high6M - ((high6M - low6M) / 2)
+dif6M = net_com - eq6M
+
+
+formatString = "###,###,###.###"
+
+
+if barstate.islast
+    eq = netComExtremeHigh - ((netComExtremeHigh - netComExtremeLow) / 2)
+    dif = net_com - eq
+
+    var summaryLabelText = "Period: " + tostring(periodExtreme) + "W\n" + "Current: " + tostring(net_com, formatString) + "\n6M HLED: " + tostring(high6M,formatString) + " | " + tostring(low6M,formatString) + " | " + tostring(eq6M,formatString) + " | " + tostring(dif6M,formatString) + (dif6M > 0 ? " [Bear]" : " [Bull]") + "\n1Y HLED: " + tostring(high1Y,formatString) +" | " + tostring(low1Y,formatString) + " | " + tostring(eq1Y,formatString) + " | "  + tostring(dif1Y,formatString) + (dif1Y > 0 ? " [Bear]" : " [Bull]") + "\n4Y HLED: " + tostring(high4Y,formatString) + " | " + tostring(low4Y,formatString) + " | " + tostring(eq4Y,formatString) + " | " + tostring(dif4Y,formatString) + (dif4Y > 0 ? " [Bear]" : " [Bull]")
+
+    if isSummaryLabelShown
+        label.new(bar_index, net_com + abs(net_com / 10), summaryLabelText, color=color.black, textcolor=color.white)
+    
+    line.new(x1=bar_index-periodExtreme, y1 = netComExtremeHigh, x2 = bar_index, y2=netComExtremeHigh, extend=extend.right, color=color.gray)
+    label.new(bar_index-periodExtreme, netComExtremeHigh, "High: " + tostring(netComExtremeHigh,formatString), style=label.style_none, color=color.gray)
+
+    line.new(x1=bar_index-periodExtreme, y1=eq, x2 = bar_index, y2=eq, extend=extend.right)
+    label.new(bar_index-periodExtreme, eq, "EQ: " + tostring(eq,formatString), style=label.style_none, color=color.blue)
+
+    line.new(x1=bar_index-periodExtreme, y1 = netComExtremeLow, x2 = bar_index, y2=netComExtremeLow, extend=extend.right, color=color.gray)
+    label.new(bar_index-periodExtreme, netComExtremeLow, "Low: " + tostring(netComExtremeLow,formatString), style=label.style_none, color=color.gray)
+
+    
+plot(net_com, color = color.black, transp = 0  , linewidth = 2)
+  
+
