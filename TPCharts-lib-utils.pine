@@ -49,6 +49,11 @@ drawLineLabelAlign(line, text, alignment) =>
     label.new(align, line.get_y1(line), text, style=label.style_none, color=color.black, xloc=xloc.bar_time, size=size.small)
 
 drawLineLabel(line, text) => drawLineLabelAlign(line, text, "r")
+
+getSValText(condition, text, value) => condition ? text + " (" + value + ")" : text
+
+getValText(condition, text, value) => getSValText(condition, text, tostring(value))
+
 //
 //END TPCharts Utils
 //
