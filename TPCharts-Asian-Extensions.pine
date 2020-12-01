@@ -1,0 +1,193 @@
+//@version=4
+study("TPCharts Asia Extensions", overlay=true)
+
+//
+// START TPCharts Utils
+//
+toPips(v) => syminfo.type == 'forex' ? v/syminfo.mintick/10 : v
+
+getPrice(condition, ohlc) => 
+    float ret = na
+    if condition and na(ret[1])
+        if ohlc == "o"
+            ret := open
+    else
+        ret := ret[1]
+    ret[0]
+
+uVal(interval, amount) => 
+    iDay = 86400000
+    iWeek = iDay * 6 // Assuming Sunday not included in chart
+    iHour = iDay / 24
+    iMinute = iHour / 60
+
+    multiplier = 0
+
+    if interval=="W"
+        multiplier := iWeek
+
+    if interval=="D"
+        multiplier := iDay
+    
+    if interval=="60"
+        multiplier := iHour
+
+    multiplier * amount
+
+drawLine(price, timeStart, timeEnd) => 
+    line.new(x1=timeStart, y1=price, x2=timeEnd, y2=price, extend=extend.none, xloc=xloc.bar_time, color=color.new(color.black, 50))
+
+drawLineLabelAlign(line, text, alignment) =>
+    align = timenow
+
+    if alignment == "l"
+        align := line.get_x1(line)
+
+    if alignment == "r"
+        align := line.get_x2(line)
+
+    if alignment == "c"
+        align := timenow < line.get_x2(line) ? timenow+uVal("60", 1) : line.get_x2(line)+uVal("60", 1)
+
+    label.new(align, line.get_y1(line), text, style=label.style_none, color=color.black, xloc=xloc.bar_time, size=size.small)
+
+drawLineLabel(line, text) => drawLineLabelAlign(line, text, "r")
+
+getSValText(condition, text, value) => condition ? text + " (" + value + ")" : text
+
+getValText(condition, text, value) => getSValText(condition, text, tostring(value))
+
+
+
+//
+//END TPCharts Utils
+//
+
+var hourSessionStart = input(0, "Asia session start hour (GMT)", minval=0, maxval=23)
+var hourSessionStop  = input(5, "Asia session end hour (GMT)", minval=0, maxval=23)
+var extend  = input(title="Extend?", type=input.bool, defval=false)
+var extCount  = input(title="How Many Extensions?", type=input.integer, defval=10)
+var showLower  = input(title="Show Lower?", type=input.bool, defval=false)
+var showUpper  = input(title="Show Upper?", type=input.bool, defval=true)
+var showExtLabels  = input(title="Show Labels?", type=input.bool, defval=true)
+var showExtPrices = input(title="Show Prices?", type=input.bool, defval=true)
+var showExtNumbers = input(title="Show Extension Numbers?", type=input.bool, defval=true)
+var showExtDayofWeek = input(title="Show Extension Day of Week?", type=input.bool, defval=true)
+
+// var showMo = input(title="Show Monday?", type=input.bool, defval=true)
+// var showTu = input(title="Show Tuesday?", type=input.bool, defval=true)
+// var showWe = input(title="Show Wednesday?", type=input.bool, defval=true)
+// var showTh = input(title="Show Thursday?", type=input.bool, defval=true)
+// var showFr = input(title="Show Friday?", type=input.bool, defval=true)
+// var showSa = input(title="Show Saturday?", type=input.bool, defval=false)
+
+var float hi              = na
+var float lo              = na
+var float plotHi          = na
+var float plotLo          = na
+
+var float extBase = na
+var float ext1 = na
+var float ext2 = na
+var float ext3 = na
+var float ext4 = na
+var float ext5 = na
+var float extn1 = na
+var float extn2 = na
+var float extn3 = na
+var float extn4 = na
+var float extn5 = na
+
+var int   currentHourGMT  = na
+var bool  inSession       = na
+var bool  enteringSession = na
+var bool  exitingSession  = na
+var bool showLabel = false
+var int startBI = na
+var int exitBI = na
+
+currentHourGMT  := hour(time, "GMT")
+
+inSession       := (currentHourGMT >= hourSessionStart and currentHourGMT < hourSessionStop)
+enteringSession := inSession and not inSession[1]
+exitingSession  := not inSession and inSession[1]
+
+extTextPrefix = "AR"
+
+getHumanDate() =>
+    ret = ""
+    if dayofweek == dayofweek.sunday
+        ret := "Su"
+    if dayofweek == dayofweek.monday
+        ret := "Mo"
+    if dayofweek == dayofweek.tuesday
+        ret := "Tu"
+    if dayofweek == dayofweek.wednesday
+        ret := "We"
+    if dayofweek == dayofweek.thursday
+        ret := "Th"
+    if dayofweek == dayofweek.friday
+        ret := "Fr"
+    if dayofweek == dayofweek.saturday
+        ret := "Sa"
+    ret
+
+if enteringSession
+    plotLo := na
+    plotHi := na
+    startBI := bar_index
+
+float exitLow = na
+float lastLow = 99999999999
+float lastHigh = 0
+
+if inSession
+    // label.new(bar_index, high, tostring(currentHourGMT))
+    lo := min(low,  nz(lo, 1.0e23))
+    hi := max(high, nz(hi))
+
+    lastLow := lo < lastLow ? lo : lastLow
+    lastHigh := hi > lastHigh ? hi : lastHigh
+
+    extBase := hi - lo
+    ext1 := hi + (extBase * 1)
+    ext2 := hi + (extBase * 2)
+    ext3 := hi + (extBase * 3)
+
+if exitingSession
+    plotLo := lo
+    plotHi := hi
+    lo     := na
+    hi     := na
+    exitBI := bar_index
+
+    if weekofyear(timenow) == weekofyear(time) or (weekofyear(timenow)-1 == weekofyear(time) and dayofweek(time) == dayofweek.friday)
+        arSpread = lastHigh[1] - lastLow[1]
+        pips = tostring(arSpread/syminfo.mintick/10)
+
+        for i=1 to extCount
+            labelText = getSValText(showExtDayofWeek, "", getHumanDate())
+
+            if showUpper
+                extHigh = lastHigh[1]+(arSpread*i)
+                line.new(x1=startBI, y1=extHigh, x2=exitBI, y2=extHigh, extend=extend ? extend.right : extend.none, color=color.new(color.black, 75))
+
+                if showExtLabels
+                    upperLabelText = getValText(showExtPrices, labelText, extHigh)
+                    
+                    if showExtNumbers
+                        upperLabelText := "+" + extTextPrefix + tostring(i) + upperLabelText
+
+                    label.new(startBI, extHigh, upperLabelText, style=label.style_none)
+
+            if showLower
+                extLow = lastLow[1]-(arSpread*i)
+                line.new(x1=startBI, y1=extLow, x2=exitBI, y2=extLow, extend=extend ? extend.right : extend.none, color=color.new(color.black, 75))
+
+                if showExtLabels
+                    lowerLabelText = getValText(showExtPrices, labelText, extLow)
+                    
+                    if showExtNumbers
+                        lowerLabelText := "-" + extTextPrefix + tostring(i) + lowerLabelText
+
+                    label.new(startBI, extLow, lowerLabelText, style=label.style_none)
