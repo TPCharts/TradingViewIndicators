@@ -1,10 +1,16 @@
 //
 // START TPCharts Utils
 //
-toPips(v) => ifsyminfo.type == 'forex' ? v/syminfo.mintick/10 : v
+toPips(v) => syminfo.type == 'forex' ? v/syminfo.mintick/10 : v
 
-drawLineWithLabel(price, x1, x2, text) => 
-    line.new(x1=x1,, y1=price, x2=x2, y2=price, extend=extend.none, color=color.black, xloc=xloc.bar_time)
+getPrice(condition, ohlc) => 
+    float ret = na
+    if condition and na(ret[1])
+        if ohlc == "o"
+            ret := open
+    else
+        ret := ret[1]
+    ret[0]
 
 uVal(interval, amount) => 
     iDay = 86400000
@@ -25,6 +31,24 @@ uVal(interval, amount) =>
 
     multiplier * amount
 
+drawLine(price, timeStart, timeEnd) => 
+    line.new(x1=timeStart, y1=price, x2=timeEnd, y2=price, extend=extend.none, xloc=xloc.bar_time, color=color.new(color.black, 50))
+
+drawLineLabelAlign(line, text, alignment) =>
+    align = timenow
+
+    if alignment == "l"
+        align := line.get_x1(line)
+
+    if alignment == "r"
+        align := line.get_x2(line)
+
+    if alignment == "c"
+        align := timenow < line.get_x2(line) ? timenow+uVal("60", 1) : line.get_x2(line)+uVal("60", 1)
+
+    label.new(align, line.get_y1(line), text, style=label.style_none, color=color.black, xloc=xloc.bar_time, size=size.small)
+
+drawLineLabel(line, text) => drawLineLabelAlign(line, text, "r")
 //
 //END TPCharts Utils
 //
