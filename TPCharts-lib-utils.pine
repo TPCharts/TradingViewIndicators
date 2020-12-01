@@ -1,0 +1,30 @@
+//
+// START TPCharts Utils
+//
+toPips(v) => ifsyminfo.type == 'forex' ? v/syminfo.mintick/10 : v
+
+drawLineWithLabel(price, x1, x2, text) => 
+    line.new(x1=x1,, y1=price, x2=x2, y2=price, extend=extend.none, color=color.black, xloc=xloc.bar_time)
+
+uVal(interval, amount) => 
+    iDay = 86400000
+    iWeek = iDay * 6 // Assuming Sunday not included in chart
+    iHour = iDay / 24
+    iMinute = iHour / 60
+
+    multiplier = 0
+
+    if interval=="W"
+        multiplier := iWeek
+
+    if interval=="D"
+        multiplier := iDay
+    
+    if interval=="60"
+        multiplier := iHour
+
+    multiplier * amount
+
+//
+//END TPCharts Utils
+//
