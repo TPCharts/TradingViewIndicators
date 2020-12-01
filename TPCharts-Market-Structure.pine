@@ -56,6 +56,9 @@ var lastMajorLowIndex2 = int(na)
 var lastMajorLowPrice2 = float(na)
 
 var isAllLinesShown = input(false, "Show All Lines?")
+var isLastMinorSPLineShown = input(true, "Show Last Minor Swing Point Line?")
+var isLastMajorSPLineShown = input(true, "Show Last Minor Swing Point Line?")
+var isMSLinesShown = input(false, "Show MS Lines?")
 
 //
 // Plot them & create the alerts
@@ -157,46 +160,64 @@ line lastBearCandleLine = na
 bearMSCcount = 0
 bullMSCcount = 0
 
-isBullStructure = testIfBullStructure()
-if isBullStructure
-    bearMSB = line.new(x1=lastMajorLowIndex2, y1=lastMajorLowPrice2, x2=lastMajorLowIndex2+1, y2=lastMajorLowPrice2, extend=extend.right, color=color.red)
-    if not isAllLinesShown
-        line.delete(bearMSB[1])
-    
-    line.delete(lastBearCandleLine)
-    line.delete(lastBearCandleMidLine)
-
-
-    if isCandleBear(1)
-        lastBearCandleHigh = high[1]
-        lastBearCandleLow = low[1]
-        lastBearCandleMid = low[1] + ((lastBearCandleHigh - lastBearCandleLow) / 2)
-
-        lastBearCandleMidLine = line.new(x1=bar_index-1, y1=lastBearCandleMid, x2=bar_index, y2=lastBearCandleMid, extend=extend.right, color=color.gray)
-        line.delete(lastBearCandleMidLine[1])
+if isMSLinesShown
+    isBullStructure = testIfBullStructure()
+    if isBullStructure
+        bearMSB = line.new(x1=lastMajorLowIndex2, y1=lastMajorLowPrice2, x2=lastMajorLowIndex2+1, y2=lastMajorLowPrice2, extend=extend.right, color=color.red)
+        if not isAllLinesShown
+            line.delete(bearMSB[1])
         
-        lastBearCandleLine = line.new(x1=bar_index-1, y1=open[1], x2=bar_index, y2=open[1], extend=extend.right, color=color.blue)
-        line.delete(lastBearCandleLine[1])
+        line.delete(lastBearCandleLine)
+        line.delete(lastBearCandleMidLine)
 
 
-alertcondition(isBullStructure and (close < lastMajorLowPrice2), title="Chad's Bearish MSB", message="Bearish MSB")
+        if isCandleBear(1)
+            lastBearCandleHigh = high[1]
+            lastBearCandleLow = low[1]
+            lastBearCandleMid = low[1] + ((lastBearCandleHigh - lastBearCandleLow) / 2)
 
-isBearStructure = testIfBearStructure()
-if isBearStructure
-    bullMSB = line.new(x1=lastMajorHighIndex2, y1=lastMajorHighPrice2, x2=lastMajorHighIndex2+1, y2=lastMajorHighPrice2, extend=extend.right, color=color.green)
-    if not isAllLinesShown
-        line.delete(bullMSB[1])
-
-    if isCandleBull(1)
-        lastBullCandleHigh = high[1]
-        lastBullCandleLow = low[1]
-        lastBullCandleMid = low[1] + ((lastBullCandleHigh - lastBullCandleLow) / 2)
-
-        lastBullCandleMidLine = line.new(x1=bar_index-1, y1=lastBullCandleMid, x2=bar_index, y2=lastBullCandleMid, extend=extend.right, color=color.gray)
-        line.delete(lastBullCandleMidLine[1])
-        
-        lastBullCandleLine = line.new(x1=bar_index-1, y1=close[1], x2=bar_index, y2=close[1], extend=extend.right, color=color.blue)
-        line.delete(lastBullCandleLine[1])
+            lastBearCandleMidLine = line.new(x1=bar_index-1, y1=lastBearCandleMid, x2=bar_index, y2=lastBearCandleMid, extend=extend.right, color=color.gray)
+            line.delete(lastBearCandleMidLine[1])
+            
+            lastBearCandleLine = line.new(x1=bar_index-1, y1=open[1], x2=bar_index, y2=open[1], extend=extend.right, color=color.blue)
+            line.delete(lastBearCandleLine[1])
 
 
-alertcondition(isBearStructure and (close > lastMajorHighPrice2), title="Chad's Bullish MSB", message="Bullish MSB")
+    // alertcondition(isBullStructure and (close < lastMajorLowPrice2), title="Chad's Bearish MSB", message="Bearish MSB")
+
+    isBearStructure = testIfBearStructure()
+    if isBearStructure
+        bullMSB = line.new(x1=lastMajorHighIndex2, y1=lastMajorHighPrice2, x2=lastMajorHighIndex2+1, y2=lastMajorHighPrice2, extend=extend.right, color=color.green)
+        if not isAllLinesShown
+            line.delete(bullMSB[1])
+
+        if isCandleBull(1)
+            lastBullCandleHigh = high[1]
+            lastBullCandleLow = low[1]
+            lastBullCandleMid = low[1] + ((lastBullCandleHigh - lastBullCandleLow) / 2)
+
+            lastBullCandleMidLine = line.new(x1=bar_index-1, y1=lastBullCandleMid, x2=bar_index, y2=lastBullCandleMid, extend=extend.right, color=color.gray)
+            line.delete(lastBullCandleMidLine[1])
+            
+            lastBullCandleLine = line.new(x1=bar_index-1, y1=close[1], x2=bar_index, y2=close[1], extend=extend.right, color=color.blue)
+            line.delete(lastBullCandleLine[1])
+
+
+    // alertcondition(isBearStructure and (close > lastMajorHighPrice2), title="Chad's Bullish MSB", message="Bullish MSB")
+
+if barstate.islast
+    if(isLastMajorSPLineShown) 
+        line.new(x1 = lastMajorHighIndex, y1 = lastMajorHighPrice, x2 = lastMajorHighIndex+1, y2 = lastMajorHighPrice, extend=extend.right, color=color.gray)
+        label.new(lastMajorHighIndex, lastMajorHighPrice, "LMaH", yloc=yloc.abovebar, style=label.style_none)
+
+        line.new(x1 = lastMajorLowIndex, y1 = lastMajorLowPrice, x2 = lastMajorLowIndex+1, y2 = lastMajorLowPrice, extend=extend.right, color=color.gray)
+        label.new(lastMajorLowIndex, lastMajorLowPrice, "LMaL", yloc=yloc.belowbar, style=label.style_none)
+
+    if(isLastMinorSPLineShown)
+        if lastMinorHighIndex != lastMajorHighIndex
+            line.new(x1 = lastMinorHighIndex, y1 = lastMinorHighPrice, x2 = lastMinorHighIndex+1, y2 = lastMinorHighPrice, extend=extend.right, color=color.gray)
+            label.new(lastMinorHighIndex, lastMinorHighPrice, "LMiH", yloc=yloc.abovebar, style=label.style_none)
+
+        if lastMinorLowIndex != lastMajorLowIndex
+            line.new(x1 = lastMinorLowIndex, y1 = lastMinorLowPrice, x2 = lastMinorLowIndex+1, y2 = lastMinorLowPrice, extend=extend.right, color=color.gray)
+            label.new(lastMinorLowIndex, lastMinorLowPrice, "LMiL", yloc=yloc.belowbar, style=label.style_none)
