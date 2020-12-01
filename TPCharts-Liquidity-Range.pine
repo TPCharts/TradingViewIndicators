@@ -9,7 +9,7 @@ isPDHLLabelShown = input(title="Show PDHL labels?", type=input.bool, defval=true
 isPDHLLabelDescriptorShown = input(title="Show PDHL Label Descriptor?", type=input.bool, defval=true)
 isPDHLPriceShown = input(title="Show PDHL prices?", type=input.bool, defval=true)
 
-isNumbersShown = input(title="Show Candle Numbers?", type=input.bool, defval=true)
+isNumbersShown = input(title="Show Candle Numbers?", type=input.bool, defval=false)
 
 isEQShown = input(title="Show Range EQ?", type=input.bool, defval=true)
 isEQLabelShown = input(title="Show EQ Label?", type=input.bool, defval=true)
@@ -20,7 +20,7 @@ isRangeLabelShown = input(title="Show Range Label?", type=input.bool, defval=tru
 isRangeLabelDescriptorShown = input(title="Show Range Label Descriptor?", type=input.bool, defval=true)
 isRangePriceShown = input(title="Show Range Price?", type=input.bool, defval=true)
 
-isSundayIgnored = input(title="Ignore Sunday (don't use on Sunday then)?", type=input.bool, defval=true)
+isSundayIgnored = input(title="Ignore Sunday (don't use on Sunday then)?", type=input.bool, defval=false)
 
 isCurrentDay = security(syminfo.tickerid, "D", barstate.islast)
 
@@ -58,9 +58,27 @@ var rangeHighLabelText = ""
 var rangeLowLabelText = ""
 
 
+line rangeHighLine = na
+label rangeHighLabel = na
+
+line rangeLowLine = na
+label rangeLowLabel = na
+
+line PDHLHighLine = na
+label PDHLHighLabel = na
+
+line PDHLLowLine = na
+label PDHLLowLabel = na
+
+line eqLine = na
+label eqLabel = na
+
 if isCurrentDay
-    rangeHighLine = line.new(x1=rangeStartTime, y1=rangeHighPrice, x2=timelocOffset, y2=rangeHighPrice, extend=extend.right, color=color.black, xloc=xloc.bar_time)
-    rangeLowLine = line.new(x1=rangeStartTime, y1=rangeLowPrice, x2=timelocOffset, y2=rangeLowPrice, extend=extend.right, color=color.black, xloc=xloc.bar_time)
+    rangeHighLine := line.new(x1=rangeStartTime, y1=rangeHighPrice, x2=timelocOffset, y2=rangeHighPrice, extend=extend.right, color=color.black, xloc=xloc.bar_time)
+    line.delete(rangeHighLine[1])
+    
+    rangeLowLine := line.new(x1=rangeStartTime, y1=rangeLowPrice, x2=timelocOffset, y2=rangeLowPrice, extend=extend.right, color=color.black, xloc=xloc.bar_time)
+    line.delete(rangeLowLine[1])
 
     if isRangeLabelShown
         if isRangePriceShown
@@ -71,12 +89,18 @@ if isCurrentDay
             rangeHighLabelText := "Liq Range High" + (rangeHighLabelText == "" ? "" : " (" + rangeHighLabelText + ")") 
             rangeLowLabelText := "Liq Range Low" + (rangeLowLabelText == "" ? "" : " (" + rangeLowLabelText + ")") 
 
-        rangeHighLabel = label.new(rangeStartTime, rangeHighPrice, text=rangeHighLabelText, style=label.style_none, xloc=xloc.bar_time)
-        rangeLowLabel = label.new(rangeStartTime, rangeLowPrice, text=rangeLowLabelText, style=label.style_none, xloc=xloc.bar_time)
+        rangeHighLabel := label.new(rangeStartTime, rangeHighPrice, text=rangeHighLabelText, style=label.style_none, xloc=xloc.bar_time)
+        label.delete(rangeHighLabel[1])
+
+        rangeLowLabel := label.new(rangeStartTime, rangeLowPrice, text=rangeLowLabelText, style=label.style_none, xloc=xloc.bar_time)
+        label.delete(rangeLowLabel[1])
 
     if isPDHLShown
-        line.new(x1=tdot, y1=pdh, x2=timelocOffset, y2=pdh, extend=extend.right, color=color.black, style=line.style_dotted, width=1, xloc=xloc.bar_time)
-        line.new(x1=tdot, y1=pdl, x2=timelocOffset, y2=pdl, extend=extend.right, color=color.black, style=line.style_dotted, width=1, xloc=xloc.bar_time)
+        PDHLHighLine := line.new(x1=tdot, y1=pdh, x2=timelocOffset, y2=pdh, extend=extend.right, color=color.black, style=line.style_dotted, width=1, xloc=xloc.bar_time)
+        line.delete(PDHLHighLine[1])
+
+        PDHLLowLine := line.new(x1=tdot, y1=pdl, x2=timelocOffset, y2=pdl, extend=extend.right, color=color.black, style=line.style_dotted, width=1, xloc=xloc.bar_time)
+        line.delete(PDHLLowLine[1])
 
         if isPDHLLabelShown
             if isPDHLPriceShown
@@ -88,8 +112,11 @@ if isCurrentDay
                 pdlLabelText := "PDL" + (pdlLabelText == "" ? "" : " (" + pdlLabelText + ")") 
 
             if isPDHLLabelShown
-                label.new(timelocOffset, pdh, text=pdhLabelText, style=label.style_none,xloc=xloc.bar_time)
-                label.new(timelocOffset, pdl, text=pdlLabelText, style=label.style_none, xloc=xloc.bar_time)
+                PDHLHighLabel := label.new(timelocOffset, pdh, text=pdhLabelText, style=label.style_none,xloc=xloc.bar_time)
+                label.delete(PDHLHighLabel[1])
+
+                PDHLLowLabel := label.new(timelocOffset, pdl, text=pdlLabelText, style=label.style_none, xloc=xloc.bar_time)
+                label.delete(PDHLLowLabel[1])
 
     if isNumbersShown and timeframe.period == "D"
         var counter = 0
@@ -103,7 +130,8 @@ if isCurrentDay
                     label.new(bar_index-i, high[i], tostring(counter), color=color.black, yloc=yloc.abovebar, textcolor=color.white)
 
     if isEQShown
-        line.new(x1=rangeStartTime, y1=rangeEQPrice, x2=timelocOffset, y2=rangeEQPrice, extend=extend.right, color=color.blue, width=1, xloc=xloc.bar_time)
+        eqLine := line.new(x1=rangeStartTime, y1=rangeEQPrice, x2=timelocOffset, y2=rangeEQPrice, extend=extend.right, color=color.blue, width=1, xloc=xloc.bar_time)
+        line.delete(eqLine[1])
 
         if isEQLabelShown
             if isEQPriceShown
@@ -112,6 +140,6 @@ if isCurrentDay
             if isEQLabelDescriptorShown
                 eqLabelText := "Liq Range EQ" + (eqLabelText == "" ? "" : " (" + eqLabelText + ")") 
 
-            label.new(rangeStartTime, rangeEQPrice, text=eqLabelText, style=label.style_none, color=color.blue, textcolor=color.blue, xloc=xloc.bar_time)
-        
+            eqLabel := label.new(rangeStartTime, rangeEQPrice, text=eqLabelText, style=label.style_none, color=color.blue, textcolor=color.blue, xloc=xloc.bar_time)
+            label.delete(eqLabel[1])
  
